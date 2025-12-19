@@ -1,0 +1,5 @@
+{
+  "name": "NoriOLT Advanced Management",
+  "description": "NoriOLT is an advanced management platform for OLTs that unifies configurations, automates client provisioning, and eliminates day-to-day technical complexity. Features user control by access levels and detailed logs for real-time monitoring and simplified maintenance.",
+  "requestFramePermissions": []
+}
