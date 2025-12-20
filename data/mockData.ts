@@ -35,7 +35,9 @@ export const mockONUs: ONU[] = [
   { id: 'onu2', name: 'valdodocunha', sn: 'HWTC157D42A4', olt: 'PGM - Jetz', pon: '0/5/11:40', zone: 'CEO 009', odb: 'None', signal: -19.2, mode: 'Bridge', vlan: 11, type: 'EG8010H', authDate: '02-12-2025', status: 'online' },
   { id: 'onu3', name: 'franciscosvieira', sn: 'HWTCF813D8A7', olt: 'PGM - Jetz', pon: '0/2/12:30', zone: 'CEO 092', odb: 'None', signal: -24.1, mode: 'Bridge', vlan: 11, type: 'EG8010H', authDate: '02-12-2025', status: 'online' },
   { id: 'onu4', name: 'laislucena', sn: 'HWTC36F5BDAE', olt: 'PGM - Jetz', pon: '0/1/4:25', zone: 'CEO 001', odb: 'None', signal: -18.8, mode: 'Router', vlan: 11, type: 'EG8145X6-10', authDate: '02-12-2025', status: 'online' },
-  { id: 'onu5', name: 'naila', sn: 'HWTCF487A59F', olt: 'PGM - Jetz', pon: '0/1/4:26', zone: 'CEO 120', odb: 'None', signal: -21.4, mode: 'Router', vlan: 11, type: 'HG8245Q2', authDate: '02-12-2025', status: 'online' }
+  { id: 'onu5', name: 'naila', sn: 'HWTCF487A59F', olt: 'PGM - Jetz', pon: '0/1/4:26', zone: 'CEO 120', odb: 'None', signal: -21.4, mode: 'Router', vlan: 11, type: 'HG8245Q2', authDate: '02-12-2025', status: 'online' },
+  { id: 'onu6', name: 'rodrigo_silva', sn: 'HWTC4A2211C9', olt: 'ULI - Jetz', pon: '0/2/1:10', zone: 'CEO 001', odb: 'ODB-01', signal: -17.5, mode: 'Router', vlan: 100, type: 'EG8145X6', authDate: '05-12-2025', status: 'online' },
+  { id: 'onu7', name: 'maria_oliveira', sn: 'HWTC998877AA', olt: 'DEU - Jetz', pon: '1/0/4:2', zone: 'CEO 055', odb: 'ODB-02', signal: -23.8, mode: 'Bridge', vlan: 200, type: 'EG8010H', authDate: '06-12-2025', status: 'online' }
 ];
 
 export const networkStatusData = [

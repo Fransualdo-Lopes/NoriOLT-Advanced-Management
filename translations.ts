@@ -62,7 +62,6 @@ export const translations = {
     export: "Export",
     odb: "ODB",
     zone: "Zone",
-    // Missing translations
     applyPreset: "Apply Preset",
     noUnconfigured: "No pending ONUs found",
     authorizationPresets: "Authorization Presets",
@@ -137,7 +136,6 @@ export const translations = {
     export: "Exportar",
     odb: "ODB",
     zone: "Zona",
-    // Missing translations
     applyPreset: "Aplicar Preset",
     noUnconfigured: "Nenhuma ONU pendente encontrada",
     authorizationPresets: "Presets de Autorização",
