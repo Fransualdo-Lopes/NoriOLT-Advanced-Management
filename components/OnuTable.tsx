@@ -20,7 +20,8 @@ const OnuTable: React.FC<OnuTableProps> = ({ language }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await onuService.getOnus({ page, search });
+      // Added required limit property to match OnuFilters interface
+      const response = await onuService.getOnus({ page, search, limit: 10 });
       setOnus(response.data);
       setTotal(response.total);
     } catch (err) {

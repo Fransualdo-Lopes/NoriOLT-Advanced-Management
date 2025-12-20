@@ -11,7 +11,7 @@ import { unconfiguredOnuService } from '../services/unconfiguredOnuService';
 import { oltService } from '../services/oltService';
 import { provisioningService } from '../services/provisioningService';
 import { usePolling } from '../hooks/usePolling';
-import { socketService } from '../services/socketService';
+import { socketService, SocketStatus } from '../services/socketService';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 interface UnconfiguredViewProps {
@@ -25,7 +25,7 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
   const [loading, setLoading] = useState(true);
   const [filterOltId, setFilterOltId] = useState('any');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [socketStatus, setSocketStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
+  const [socketStatus, setSocketStatus] = useState<SocketStatus>('disconnected');
 
   // Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -100,11 +100,11 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
   }, []);
 
   // Fallback Polling: Still necessary if socket fails or during high-latency periods
-  // Only active if socket is NOT connected
+  // Only active if socket is NOT connected/simulated
   usePolling(
     () => fetchData(false), 
     30000, 
-    !isAuthModalOpen && !isAuthorizing && socketStatus !== 'connected'
+    !isAuthModalOpen && !isAuthorizing && socketStatus !== 'connected' && socketStatus !== 'simulated'
   );
 
   const groupedOnus = useMemo(() => {
@@ -181,11 +181,12 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
         <div className="flex flex-wrap items-center gap-3">
           {/* Socket Status */}
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[9px] font-black uppercase tracking-[0.15em] transition-all ${
-            socketStatus === 'connected' ? 'bg-blue-50 border-blue-100 text-blue-600' : 
+            socketStatus === 'connected' ? 'bg-green-50 border-green-100 text-green-600' : 
+            socketStatus === 'simulated' ? 'bg-blue-50 border-blue-100 text-blue-600' : 
             socketStatus === 'connecting' ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-red-50 border-red-100 text-red-600'
           }`}>
-            {socketStatus === 'connected' ? <Zap size={14} fill="currentColor" /> : <ZapOff size={14} />}
-            Live OLT Link: {socketStatus}
+            {(socketStatus === 'connected' || socketStatus === 'simulated') ? <Zap size={14} fill="currentColor" /> : <ZapOff size={14} />}
+            Live OLT Link: <span className="opacity-70">{socketStatus}</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
