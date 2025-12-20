@@ -32,8 +32,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
     { id: 'diagnostics', label: t.diagnostics, icon: Activity, permission: Permission.VIEW_OLT_STATS },
   ];
 
+  // Filtra itens baseado nas permissões do usuário atual
   const navItems = allNavItems.filter(item => 
-    !item.permission || hasPermission(item.permission)
+    item.permission === null || hasPermission(item.permission)
   );
 
   const handleNavClick = (id: ViewType) => {
@@ -46,15 +47,15 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
       <header className="bg-[#0f172a] text-white shadow-xl sticky top-0 z-50 overflow-hidden border-b border-blue-900/30">
         <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
         <div className="container mx-auto px-4 py-3 flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 lg:gap-8 flex-1">
             <div 
-              className="flex items-center gap-2 cursor-pointer group" 
+              className="flex items-center gap-2 cursor-pointer group shrink-0" 
               onClick={() => handleNavClick('dashboard')}
             >
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
                 <Globe className="text-white" size={24} />
               </div>
-              <h1 className="text-xl font-black tracking-tighter italic transition-colors">
+              <h1 className="text-xl font-black tracking-tighter italic transition-colors hidden sm:block">
                 Nori<span className="text-blue-400">OLT</span>
               </h1>
             </div>
@@ -64,8 +65,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
                 <button 
                   key={item.id}
                   onClick={() => handleNavClick(item.id as ViewType)}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${
-                    activeView === item.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  className={`px-3 xl:px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
+                    activeView === item.id 
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   <item.icon size={16} />
@@ -75,7 +78,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 xl:gap-4 shrink-0">
             <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1 border border-slate-700">
                <button 
                  onClick={() => setLanguage('en')}
@@ -91,28 +94,32 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
                </button>
             </div>
 
-            <div className="hidden md:flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-full text-[10px] font-bold text-blue-400 uppercase tracking-widest">
+            <div className="hidden xl:flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-full text-[10px] font-bold text-blue-400 uppercase tracking-widest">
               <ShieldCheck size={12} />
               {user?.level || 'Level: Operator'}
             </div>
             
             <button className="p-2 text-gray-400 hover:text-white transition-colors relative">
                <Bell size={20} />
-               <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
             </button>
+            
             <div className="h-8 w-px bg-slate-800 mx-1 hidden md:block"></div>
+            
             <div className="flex items-center gap-3">
               <div className="hidden md:block text-right">
                 <p className="text-xs font-bold leading-tight">{user?.username || t.admin}</p>
-                <p className="text-[10px] text-slate-500 font-medium">{user?.role || t.role}</p>
+                <p className="text-[10px] text-slate-500 font-medium tracking-tighter uppercase">{user?.role === 'ADMIN' ? 'Arquiteto de Rede' : user?.role}</p>
               </div>
               <button 
                 onClick={onLogout}
-                className="bg-slate-800 p-2 rounded-full border border-slate-700 hover:bg-slate-700 transition-colors"
+                className="bg-slate-800 p-2 rounded-full border border-slate-700 hover:bg-slate-700 transition-colors group"
+                title="Sair"
               >
-                <LogOut size={18} className="text-slate-400" />
+                <LogOut size={18} className="text-slate-400 group-hover:text-white transition-colors" />
               </button>
             </div>
+            
             <button className="lg:hidden p-2 text-gray-400" onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}>
                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

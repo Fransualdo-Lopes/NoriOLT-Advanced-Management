@@ -17,7 +17,7 @@ export const authService = {
         user: {
           id: 'u1',
           username: 'Admin Nori',
-          role: 'Network Architect',
+          role: 'ADMIN', // Alterado de 'Network Architect' para 'ADMIN' para alinhar com roles.ts
           level: 'Super Admin'
         }
       };
