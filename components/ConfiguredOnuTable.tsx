@@ -3,6 +3,8 @@ import React from 'react';
 import { Eye, Signal, Activity, WifiOff, Trash2, Edit3, Smartphone, Monitor } from 'lucide-react';
 import { ONU } from '../types';
 import { Language, translations } from '../translations';
+import { Permission } from '../roles';
+import PermissionGate from './PermissionGate';
 
 interface ConfiguredOnuTableProps {
   onus: ONU[];
@@ -82,7 +84,6 @@ const ConfiguredOnuTable: React.FC<ConfiguredOnuTableProps> = ({ onus, loading, 
                     {onu.status === 'online' ? (
                       <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" title="Online" />
                     ) : onu.status === 'los' ? (
-                      // Fixed: removed the unsupported 'title' prop from Lucide icon component
                       <WifiOff size={14} className="text-red-500" />
                     ) : (
                       <div className="w-2.5 h-2.5 rounded-full bg-slate-300" title="Offline" />
@@ -94,12 +95,18 @@ const ConfiguredOnuTable: React.FC<ConfiguredOnuTableProps> = ({ onus, loading, 
                     <button className="p-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all shadow-md shadow-slate-900/10" title="Inspect">
                       <Eye size={12} />
                     </button>
-                    <button className="p-2 bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 rounded-lg transition-all" title="Edit">
-                      <Edit3 size={12} />
-                    </button>
-                    <button className="p-2 bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 rounded-lg transition-all" title="Delete">
-                      <Trash2 size={12} />
-                    </button>
+                    
+                    <PermissionGate permission={Permission.PROVISION_ONU}>
+                      <button className="p-2 bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 rounded-lg transition-all" title="Edit">
+                        <Edit3 size={12} />
+                      </button>
+                    </PermissionGate>
+                    
+                    <PermissionGate permission={Permission.DELETE_ONU}>
+                      <button className="p-2 bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 rounded-lg transition-all" title="Delete">
+                        <Trash2 size={12} />
+                      </button>
+                    </PermissionGate>
                   </div>
                 </td>
                 <td className="px-6 py-4">

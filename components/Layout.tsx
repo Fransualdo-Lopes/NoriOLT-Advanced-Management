@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { ViewType } from '../types';
 import { Language, translations } from '../translations';
+import { useAuth } from '../contexts/AuthContext';
+import { Permission } from '../roles';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,15 +20,20 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, language, setLanguage, onLogout }) => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { hasPermission, user } = useAuth();
   const t = translations[language];
 
-  const navItems = [
-    { id: 'dashboard', label: t.dashboard, icon: LayoutGrid },
-    { id: 'unconfigured', label: t.unconfigured, icon: Wand2 },
-    { id: 'configured', label: t.configured, icon: CheckCircle },
-    { id: 'graphs', label: t.graphs, icon: BarChart2 },
-    { id: 'diagnostics', label: t.diagnostics, icon: Activity },
+  const allNavItems = [
+    { id: 'dashboard', label: t.dashboard, icon: LayoutGrid, permission: null },
+    { id: 'unconfigured', label: t.unconfigured, icon: Wand2, permission: Permission.VIEW_UNCONFIGURED },
+    { id: 'configured', label: t.configured, icon: CheckCircle, permission: Permission.VIEW_CONFIGURED },
+    { id: 'graphs', label: t.graphs, icon: BarChart2, permission: Permission.VIEW_OLT_STATS },
+    { id: 'diagnostics', label: t.diagnostics, icon: Activity, permission: Permission.VIEW_OLT_STATS },
   ];
+
+  const navItems = allNavItems.filter(item => 
+    !item.permission || hasPermission(item.permission)
+  );
 
   const handleNavClick = (id: ViewType) => {
     setActiveView(id);
@@ -85,7 +92,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
 
             <div className="hidden md:flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-full text-[10px] font-bold text-blue-400 uppercase tracking-widest">
               <ShieldCheck size={12} />
-              {t.level}
+              {user?.level || 'Level: Operator'}
             </div>
             
             <button className="p-2 text-gray-400 hover:text-white transition-colors relative">
@@ -95,8 +102,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
             <div className="h-8 w-px bg-slate-800 mx-1 hidden md:block"></div>
             <div className="flex items-center gap-3">
               <div className="hidden md:block text-right">
-                <p className="text-xs font-bold leading-tight">{t.admin}</p>
-                <p className="text-[10px] text-slate-500 font-medium">{t.role}</p>
+                <p className="text-xs font-bold leading-tight">{user?.username || t.admin}</p>
+                <p className="text-[10px] text-slate-500 font-medium">{user?.role || t.role}</p>
               </div>
               <button 
                 onClick={onLogout}

@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { ViewType } from './types';
 import { Language, translations } from './translations';
-import { authService } from './services/authService';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Permission } from './roles';
 import Layout from './components/Layout';
 import DashboardView from './views/DashboardView';
 import ConfiguredView from './views/ConfiguredView';
@@ -11,21 +12,25 @@ import UnconfiguredView from './views/UnconfiguredView';
 import OnuProvisionForm from './components/OnuProvisionForm';
 import MaintenanceView from './views/MaintenanceView';
 import LoginView from './views/LoginView';
+import AccessDeniedView from './views/AccessDeniedView';
 
-const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(authService.isAuthenticated());
+const AppContent: React.FC = () => {
+  const { isAuthenticated, logout, hasPermission, user } = useAuth();
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [language, setLanguage] = useState<Language>('en');
   const t = translations[language];
 
   const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
+    // Auth context will automatically pick up user from localStorage on reload
+    // but in a single session we usually refresh state or rely on context
+    window.location.reload(); 
   };
 
-  const handleLogout = () => {
-    authService.logout();
-    setIsAuthenticated(false);
-    setActiveView('dashboard');
+  const renderProtectedView = (viewId: ViewType, permission: Permission, component: React.ReactNode) => {
+    if (hasPermission(permission)) {
+      return component;
+    }
+    return <AccessDeniedView language={language} onGoBack={() => setActiveView('dashboard')} />;
   };
 
   const renderContent = () => {
@@ -33,11 +38,21 @@ const App: React.FC = () => {
       case 'dashboard':
         return <DashboardView language={language} />;
       case 'configured':
-        return <ConfiguredView language={language} onAddOnu={() => setActiveView('provisioning')} />;
+        return renderProtectedView(
+          'configured', 
+          Permission.VIEW_CONFIGURED, 
+          <ConfiguredView language={language} onAddOnu={() => setActiveView('provisioning')} />
+        );
       case 'unconfigured':
-        return <UnconfiguredView language={language} />;
+        return renderProtectedView(
+          'unconfigured', 
+          Permission.VIEW_UNCONFIGURED, 
+          <UnconfiguredView language={language} />
+        );
       case 'provisioning':
-        return (
+        return renderProtectedView(
+          'provisioning',
+          Permission.PROVISION_ONU,
           <div className="animate-in fade-in zoom-in duration-300">
             <OnuProvisionForm 
               language={language} 
@@ -67,9 +82,8 @@ const App: React.FC = () => {
       setActiveView={setActiveView}
       language={language}
       setLanguage={setLanguage}
-      onLogout={handleLogout}
+      onLogout={logout}
     >
-      {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-6">
         <button 
           className="hover:text-blue-500 transition-colors" 
@@ -87,5 +101,11 @@ const App: React.FC = () => {
     </Layout>
   );
 };
+
+const App: React.FC = () => (
+  <AuthProvider>
+    <AppContent />
+  </AuthProvider>
+);
 
 export default App;
