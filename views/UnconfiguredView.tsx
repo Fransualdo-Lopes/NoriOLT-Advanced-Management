@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   RefreshCcw, History, Search, 
   PlusCircle, BookOpen, Loader2, Server,
-  Cpu, Activity, Octagon, CheckCircle2, AlertTriangle
+  Cpu, Activity, Octagon, CheckCircle2, AlertTriangle, Zap, ZapOff
 } from 'lucide-react';
 import { Language, translations } from '../translations';
 import { UnconfiguredONU, OLT } from '../types';
@@ -11,6 +11,7 @@ import { unconfiguredOnuService } from '../services/unconfiguredOnuService';
 import { oltService } from '../services/oltService';
 import { provisioningService } from '../services/provisioningService';
 import { usePolling } from '../hooks/usePolling';
+import { socketService } from '../services/socketService';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 interface UnconfiguredViewProps {
@@ -24,6 +25,7 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
   const [loading, setLoading] = useState(true);
   const [filterOltId, setFilterOltId] = useState('any');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [socketStatus, setSocketStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
 
   // Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -35,7 +37,6 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
 
   /**
    * Main data fetcher
-   * @param isManual Se true, exibe o spinner no botão de refresh. Se false, é um polling silencioso.
    */
   const fetchData = useCallback(async (isManual = false) => {
     if (isManual) setIsRefreshing(true);
@@ -55,23 +56,61 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
     }
   }, [filterOltId]);
 
-  // Initial load when filter changes
+  // Initial load
   useEffect(() => {
     setLoading(true);
     fetchData();
   }, [filterOltId, fetchData]);
 
-  // Setup auto-refresh every 30 seconds
-  // Polling is paused if a modal is open or if we're currently authorizing to avoid UI jitters
-  usePolling(() => fetchData(false), 30000, !isAuthModalOpen && !isAuthorizing);
+  /**
+   * WebSocket Integration
+   * Subscribing to real-time OLT hardware events
+   */
+  useEffect(() => {
+    const unsubStatus = socketService.onStatusChange(setSocketStatus);
+    
+    // Real-time detection: Add to list instantly
+    const unsubDetected = socketService.on<UnconfiguredONU>('onu.detected', (newOnu) => {
+      setOnus(prev => {
+        const exists = prev.find(o => o.sn === newOnu.sn);
+        if (exists) return prev;
+        return [newOnu, ...prev];
+      });
+      // Show subtle hint of detection
+      setNotification({ type: 'success', message: `New hardware ${newOnu.sn} detected on ${newOnu.olt_name}` });
+      setTimeout(() => setNotification(null), 3000);
+    });
+
+    // Real-time authorization: Remove from list (synced across all operators)
+    const unsubAuthorized = socketService.on<{id: string, sn: string}>('onu.authorized', (payload) => {
+      setOnus(prev => prev.filter(o => o.id !== payload.id && o.sn !== payload.sn));
+    });
+
+    // Manual removal/unplugging: Remove from list
+    const unsubRemoved = socketService.on<{id: string}>('onu.removed', (payload) => {
+      setOnus(prev => prev.filter(o => o.id !== payload.id));
+    });
+
+    return () => {
+      unsubStatus();
+      unsubDetected();
+      unsubAuthorized();
+      unsubRemoved();
+    };
+  }, []);
+
+  // Fallback Polling: Still necessary if socket fails or during high-latency periods
+  // Only active if socket is NOT connected
+  usePolling(
+    () => fetchData(false), 
+    30000, 
+    !isAuthModalOpen && !isAuthorizing && socketStatus !== 'connected'
+  );
 
   const groupedOnus = useMemo(() => {
     return onus.reduce((acc, onu) => {
       if (!acc[onu.olt_id]) {
-        acc[onu.olt_id] = {
-          name: onu.olt_name,
-          onus: []
-        };
+        acc[onu.olt_id] = { name: onu.olt_name, onus: [] };
       }
       acc[onu.olt_id].onus.push(onu);
       return acc;
@@ -85,28 +124,16 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
 
   const handleConfirmAuthorization = async () => {
     if (!selectedOnu) return;
-    
     setIsAuthorizing(true);
     try {
       await provisioningService.authorizeOnu(selectedOnu);
-      
-      // Optimistic UI Update: Remove authorized ONU from list
       setOnus(prev => prev.filter(o => o.id !== selectedOnu.id));
-      
-      setNotification({
-        type: 'success',
-        message: `ONU ${selectedOnu.sn} authorized successfully on ${selectedOnu.olt_name}.`
-      });
-      
+      setNotification({ type: 'success', message: `ONU ${selectedOnu.sn} authorized successfully.` });
       setIsAuthModalOpen(false);
     } catch (error: any) {
-      setNotification({
-        type: 'error',
-        message: error.message || 'Authorization failed due to OLT communication error.'
-      });
+      setNotification({ type: 'error', message: error.message || 'Authorization failed.' });
     } finally {
       setIsAuthorizing(false);
-      // Auto-clear notification
       setTimeout(() => setNotification(null), 5000);
     }
   };
@@ -119,7 +146,7 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
           notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
         }`}>
           {notification.type === 'success' ? <CheckCircle2 size={24} className="text-green-600" /> : <AlertTriangle size={24} className="text-red-600" />}
-          <p className="text-xs font-bold uppercase tracking-tight">{notification.message}</p>
+          <p className="text-xs font-bold uppercase tracking-tight leading-tight">{notification.message}</p>
         </div>
       )}
 
@@ -150,21 +177,29 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
           </button>
         </div>
 
-        {/* Auto Actions Section */}
-        <div className="flex flex-wrap items-center gap-3 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
-          <div className="px-3 flex items-center gap-2 border-r border-slate-200 mr-2">
-             <Activity size={14} className="text-blue-500" />
-             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t.autoActions}</span>
+        {/* Status Indicators & Auto Actions */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Socket Status */}
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[9px] font-black uppercase tracking-[0.15em] transition-all ${
+            socketStatus === 'connected' ? 'bg-blue-50 border-blue-100 text-blue-600' : 
+            socketStatus === 'connecting' ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-red-50 border-red-100 text-red-600'
+          }`}>
+            {socketStatus === 'connected' ? <Zap size={14} fill="currentColor" /> : <ZapOff size={14} />}
+            Live OLT Link: {socketStatus}
           </div>
-          <button className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
-            {t.configureActions}
-          </button>
-          <button className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2">
-            <History size={12} /> {t.taskHistory}
-          </button>
-          <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-red-600/20">
-            <Octagon size={12} /> {t.stopAuto}
-          </button>
+
+          <div className="flex flex-wrap items-center gap-3 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
+            <div className="px-3 flex items-center gap-2 border-r border-slate-200 mr-2">
+               <Activity size={14} className="text-blue-500" />
+               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t.autoActions}</span>
+            </div>
+            <button className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+              {t.configureActions}
+            </button>
+            <button className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2">
+              <History size={12} /> {t.taskHistory}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -172,7 +207,7 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-slate-200">
           <Loader2 size={48} className="text-blue-600 animate-spin mb-4" />
-          <p className="text-xs font-black text-slate-400 uppercase tracking-widest italic">Polling PON interfaces...</p>
+          <p className="text-xs font-black text-slate-400 uppercase tracking-widest italic">Syncing interfaces...</p>
         </div>
       ) : Object.keys(groupedOnus).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-dashed border-slate-200 text-center">
@@ -180,7 +215,7 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
             <Search size={32} className="text-slate-200" />
           </div>
           <h3 className="text-xl font-black text-slate-400 tracking-tighter uppercase mb-2">{t.noUnconfigured}</h3>
-          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest max-w-xs">No pending hardware detected on authorized OLT ports at this moment.</p>
+          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest max-w-xs">Waiting for new hardware detection via PON ports...</p>
         </div>
       ) : (
         <div className="space-y-10">
@@ -210,7 +245,7 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {group.onus.map(onu => (
-                      <tr key={onu.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <tr key={onu.id} className="hover:bg-slate-50/50 transition-colors group animate-in slide-in-from-left-2 duration-300">
                         <td className="px-6 py-5">
                           <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded-lg border border-blue-100">
                             {onu.pon_type}
@@ -232,23 +267,12 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
                         <td className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{onu.model}</td>
                         <td className="px-6 py-5">
                           <div className="flex items-center justify-center gap-2">
-                            {onu.supports_immediate_auth ? (
-                              <button 
-                                onClick={() => handleAuthorizeClick(onu)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/10 uppercase tracking-widest"
-                              >
-                                {t.authorize}
-                              </button>
-                            ) : (
-                              <div className="flex gap-2">
-                                <button className="bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black px-4 py-2.5 rounded-xl transition-all uppercase tracking-widest">
-                                  {t.viewOnu}
-                                </button>
-                                <button className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-[10px] font-black px-4 py-2.5 rounded-xl transition-all uppercase tracking-widest">
-                                  {t.resync}
-                                </button>
-                              </div>
-                            )}
+                            <button 
+                              onClick={() => handleAuthorizeClick(onu)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/10 uppercase tracking-widest"
+                            >
+                              {t.authorize}
+                            </button>
                           </div>
                         </td>
                       </tr>

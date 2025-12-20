@@ -1,46 +1,97 @@
 
 import { CONFIG } from '../config';
-
-type MessageHandler = (data: any) => void;
+import { UnconfiguredONU } from '../types';
 
 /**
- * Socket Service
- * Handles real-time communication for network alarms and OLT events.
+ * Event-Driven WebSocket Client for NoriOLT
+ * Handles real-time hardware detection events from OLT clusters.
  */
+
+export type SocketEventType = 'onu.detected' | 'onu.authorized' | 'onu.removed' | 'system.alert';
+
+export interface SocketMessage<T = any> {
+  event: SocketEventType;
+  payload: T;
+  timestamp: string;
+}
+
+type EventCallback<T = any> = (payload: T) => void;
+
 class SocketService {
   private socket: WebSocket | null = null;
-  private handlers: Set<MessageHandler> = new Set();
+  private listeners: Map<SocketEventType, Set<EventCallback>> = new Map();
+  private reconnectTimer: number | null = null;
+  private statusListeners: Set<(status: 'connected' | 'disconnected' | 'connecting') => void> = new Set();
 
-  connect() {
+  constructor() {
+    this.connect();
+  }
+
+  private connect() {
     if (this.socket) return;
 
+    this.notifyStatus('connecting');
     this.socket = new WebSocket(CONFIG.SOCKET_URL);
 
     this.socket.onopen = () => {
-      console.log('Connected to NoriOLT Event Stream');
+      console.log('✅ Real-time Link established with NoriCore Cluster');
+      this.notifyStatus('connected');
+      if (this.reconnectTimer) {
+        clearInterval(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
     };
 
     this.socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      this.handlers.forEach(handler => handler(data));
+      try {
+        const message: SocketMessage = JSON.parse(event.data);
+        const eventListeners = this.listeners.get(message.event);
+        if (eventListeners) {
+          eventListeners.forEach(callback => callback(message.payload));
+        }
+      } catch (err) {
+        console.error('❌ Malformed Socket Message:', err);
+      }
     };
 
     this.socket.onclose = () => {
       this.socket = null;
-      console.log('Socket disconnected. Retrying in 5s...');
-      setTimeout(() => this.connect(), 5000);
+      this.notifyStatus('disconnected');
+      console.warn('⚠️ Socket disconnected. Retrying precision link in 5s...');
+      if (!this.reconnectTimer) {
+        this.reconnectTimer = window.setInterval(() => this.connect(), 5000);
+      }
+    };
+
+    this.socket.onerror = (err) => {
+      console.error('❌ Socket Link Error:', err);
     };
   }
 
-  subscribe(handler: MessageHandler) {
-    this.handlers.add(handler);
-    return () => this.handlers.delete(handler);
+  private notifyStatus(status: 'connected' | 'disconnected' | 'connecting') {
+    this.statusListeners.forEach(l => l(status));
   }
 
-  send(topic: string, message: any) {
-    if (this.socket?.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({ topic, ...message }));
+  /**
+   * High-level subscription for hardware events
+   */
+  on<T>(event: SocketEventType, callback: EventCallback<T>) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set());
     }
+    this.listeners.get(event)?.add(callback);
+    
+    // Return unsubscribe function
+    return () => this.listeners.get(event)?.delete(callback);
+  }
+
+  onStatusChange(callback: (status: 'connected' | 'disconnected' | 'connecting') => void) {
+    this.statusListeners.add(callback);
+    return () => this.statusListeners.delete(callback);
+  }
+
+  isConnected() {
+    return this.socket?.readyState === WebSocket.OPEN;
   }
 }
 
