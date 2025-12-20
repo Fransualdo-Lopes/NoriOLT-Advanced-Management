@@ -1,6 +1,6 @@
 
 import apiClient from '../apiClient';
-import { OnuProvisionPayload } from '../types';
+import { OnuProvisionPayload, UnconfiguredONU } from '../types';
 
 /**
  * Provisioning Service
@@ -23,6 +23,24 @@ export const provisioningService = {
     }
 
     return { success: true, id: `onu_${Math.random().toString(36).substr(2, 9)}` };
+  },
+
+  /**
+   * Specifically handles the authorization of a pending ONU
+   * POST /onus/{id}/authorize
+   */
+  async authorizeOnu(onu: UnconfiguredONU): Promise<{ success: boolean }> {
+    console.log(`API POST /onus/${onu.id}/authorize`, onu);
+    
+    // Simulate API processing delay
+    await new Promise(r => setTimeout(r, 1500));
+
+    // Simulation of possible error based on SN (just for testing error UI)
+    if (onu.sn === 'ERROR_TEST_SN') {
+      throw new Error('Communication Timeout: OLT did not acknowledge OMCI configuration.');
+    }
+
+    return { success: true };
   },
 
   /**

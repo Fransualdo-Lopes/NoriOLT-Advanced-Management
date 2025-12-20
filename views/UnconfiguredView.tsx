@@ -3,12 +3,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   RefreshCcw, History, Search, 
   PlusCircle, BookOpen, Loader2, Server,
-  Cpu, Activity, Settings2, Octagon
+  Cpu, Activity, Octagon, CheckCircle2, AlertTriangle
 } from 'lucide-react';
 import { Language, translations } from '../translations';
 import { UnconfiguredONU, OLT } from '../types';
 import { unconfiguredOnuService } from '../services/unconfiguredOnuService';
 import { oltService } from '../services/oltService';
+import { provisioningService } from '../services/provisioningService';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 interface UnconfiguredViewProps {
   language: Language;
@@ -21,6 +23,14 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
   const [loading, setLoading] = useState(true);
   const [filterOltId, setFilterOltId] = useState('any');
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Modal State
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [selectedOnu, setSelectedOnu] = useState<UnconfiguredONU | null>(null);
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
+
+  // Notification State
+  const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   const fetchOnus = async (isManual = false) => {
     if (isManual) setIsRefreshing(true);
@@ -58,8 +68,51 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
     }, {} as Record<string, { name: string; onus: UnconfiguredONU[] }>);
   }, [onus]);
 
+  const handleAuthorizeClick = (onu: UnconfiguredONU) => {
+    setSelectedOnu(onu);
+    setIsAuthModalOpen(true);
+  };
+
+  const handleConfirmAuthorization = async () => {
+    if (!selectedOnu) return;
+    
+    setIsAuthorizing(true);
+    try {
+      await provisioningService.authorizeOnu(selectedOnu);
+      
+      // Optimistic UI Update: Remove authorized ONU from list
+      setOnus(prev => prev.filter(o => o.id !== selectedOnu.id));
+      
+      setNotification({
+        type: 'success',
+        message: `ONU ${selectedOnu.sn} authorized successfully on ${selectedOnu.olt_name}.`
+      });
+      
+      setIsAuthModalOpen(false);
+    } catch (error: any) {
+      setNotification({
+        type: 'error',
+        message: error.message || 'Authorization failed due to OLT communication error.'
+      });
+    } finally {
+      setIsAuthorizing(false);
+      // Auto-clear notification
+      setTimeout(() => setNotification(null), 5000);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {/* Toast Notification */}
+      {notification && (
+        <div className={`fixed top-24 right-6 z-[200] p-4 rounded-2xl shadow-2xl border flex items-center gap-4 animate-in slide-in-from-right duration-500 max-w-sm ${
+          notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          {notification.type === 'success' ? <CheckCircle2 size={24} className="text-green-600" /> : <AlertTriangle size={24} className="text-red-600" />}
+          <p className="text-xs font-bold uppercase tracking-tight">{notification.message}</p>
+        </div>
+      )}
+
       {/* Top Controls - SmartOLT Style */}
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
@@ -97,9 +150,6 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
           </button>
           <button className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2">
             <History size={12} /> {t.taskHistory}
-          </button>
-          <button className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
-            {t.refresh}
           </button>
           <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-red-600/20">
             <Octagon size={12} /> {t.stopAuto}
@@ -172,7 +222,10 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
                         <td className="px-6 py-5">
                           <div className="flex items-center justify-center gap-2">
                             {onu.supports_immediate_auth ? (
-                              <button className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/10 uppercase tracking-widest">
+                              <button 
+                                onClick={() => handleAuthorizeClick(onu)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/10 uppercase tracking-widest"
+                              >
                                 {t.authorize}
                               </button>
                             ) : (
@@ -196,6 +249,39 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
           ))}
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onConfirm={handleConfirmAuthorization}
+        title="Authorize New Hardware"
+        description="Are you sure you want to authorize this ONU? The system will automatically apply the default service profile for this PON port."
+        confirmText="Authorize ONU"
+        cancelText="Discard"
+        isLoading={isAuthorizing}
+      >
+        {selectedOnu && (
+          <div className="grid grid-cols-2 gap-y-3">
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Serial Number</p>
+              <p className="text-sm font-mono font-black text-blue-600">{selectedOnu.sn}</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Model</p>
+              <p className="text-sm font-bold text-slate-700">{selectedOnu.model}</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OLT Cluster</p>
+              <p className="text-sm font-bold text-slate-700">{selectedOnu.olt_name}</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Interface</p>
+              <p className="text-sm font-bold text-slate-700">{selectedOnu.pon_description}</p>
+            </div>
+          </div>
+        )}
+      </ConfirmationModal>
 
       {/* Bottom Footer Actions */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-center pt-8">
