@@ -17,6 +17,13 @@ export interface OnuFilters {
   status?: string;
   signal_level?: string;
   mode?: string;
+  // Added missing optional filters used in OnuFiltersBar
+  mgmt_ip?: string;
+  tr069?: string;
+  voip?: string;
+  catv?: string;
+  download?: string;
+  upload?: string;
   page: number;
   limit: number;
 }

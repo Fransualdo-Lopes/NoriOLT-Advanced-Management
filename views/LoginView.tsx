@@ -1,13 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Globe, Lock, User, ShieldCheck, ArrowRight, Eye, EyeOff } from 'lucide-react';
-import { authService } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
 
-interface LoginViewProps {
-  onLoginSuccess: () => void;
-}
-
-const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
+const LoginView: React.FC = () => {
+  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -15,7 +12,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load saved credentials on mount
+  // Carregar credenciais salvas ao montar
   useEffect(() => {
     const savedUser = localStorage.getItem('nori_remembered_user');
     const savedPass = localStorage.getItem('nori_remembered_pass');
@@ -24,7 +21,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       setPassword(savedPass);
       setRememberMe(true);
     } else {
-      // Default initial values if nothing is saved
+      // Valores padrão para demonstração rápida
       setUsername('admin');
       setPassword('password');
     }
@@ -36,9 +33,10 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     setError(null);
 
     try {
-      await authService.login({ username, password });
+      // Usar a função de login do contexto para atualizar o estado global do React
+      await login({ username, password });
       
-      // Handle "Remember Me" logic
+      // Lógica de "Lembrar-me"
       if (rememberMe) {
         localStorage.setItem('nori_remembered_user', username);
         localStorage.setItem('nori_remembered_pass', password);
@@ -46,8 +44,8 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         localStorage.removeItem('nori_remembered_user');
         localStorage.removeItem('nori_remembered_pass');
       }
-
-      onLoginSuccess();
+      
+      // Não é necessário chamar onLoginSuccess ou reload, o App.tsx vai re-renderizar automaticamente
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {
@@ -57,7 +55,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0f172a] relative overflow-hidden font-inter">
-      {/* Abstract background elements */}
+      {/* Elementos de fundo abstratos */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-blue-400/10 rounded-full blur-[100px]"></div>
       
@@ -105,7 +103,6 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 hover:text-blue-400 transition-colors"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -165,19 +162,9 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   );
 };
 
-// Internal Check icon since it wasn't imported from lucide
+// Ícone interno para evitar erro de importação
 const Check = ({ size, className }: { size: number, className: string }) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="3" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <polyline points="20 6 9 17 4 12"></polyline>
   </svg>
 );

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { 
   Globe, LayoutGrid, Wand2, CheckCircle, BarChart2, Activity, 
-  Bell, LogOut, Menu, X, ShieldCheck, Zap
+  Bell, LogOut, Menu, X, ShieldCheck, Zap, User as UserIcon
 } from 'lucide-react';
 import { ViewType } from '../types';
 import { Language, translations } from '../translations';
@@ -79,16 +79,17 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
           </div>
 
           <div className="flex items-center gap-3 xl:gap-4 shrink-0">
-            <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1 border border-slate-700">
+            {/* Seletor de Idioma Reduzido */}
+            <div className="flex items-center gap-0.5 bg-slate-800/50 rounded-md p-0.5 border border-slate-700">
                <button 
                  onClick={() => setLanguage('en')}
-                 className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${language === 'en' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                 className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${language === 'en' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
                >
                  EN
                </button>
                <button 
                  onClick={() => setLanguage('pt')}
-                 className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${language === 'pt' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                 className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${language === 'pt' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
                >
                  PT
                </button>
@@ -106,11 +107,15 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
             
             <div className="h-8 w-px bg-slate-800 mx-1 hidden md:block"></div>
             
-            <div className="flex items-center gap-3">
-              <div className="hidden md:block text-right">
-                <p className="text-xs font-bold leading-tight">{user?.username || t.admin}</p>
-                <p className="text-[10px] text-slate-500 font-medium tracking-tighter uppercase">{user?.role === 'ADMIN' ? 'Arquiteto de Rede' : user?.role}</p>
+            <div className="flex items-center gap-2">
+              {/* Área do Usuário Simplificada para apenas um ícone */}
+              <div 
+                className="w-9 h-9 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700 text-slate-400 hover:text-blue-400 transition-colors cursor-pointer"
+                title={`${user?.username} - ${user?.role}`}
+              >
+                <UserIcon size={18} />
               </div>
+
               <button 
                 onClick={onLogout}
                 className="bg-slate-800 p-2 rounded-full border border-slate-700 hover:bg-slate-700 transition-colors group"

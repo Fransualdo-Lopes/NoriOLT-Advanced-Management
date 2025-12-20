@@ -1,6 +1,11 @@
 
 import React from 'react';
-import { Search, Filter, Signal, Globe, Hash, Layers, Wifi, Monitor } from 'lucide-react';
+import { 
+  Search, Globe, Layers, Hash, Monitor, 
+  Settings2, Download, Upload, FileOutput, 
+  Wifi, Signal, ChevronLeft, ChevronRight,
+  ChevronsLeft, ChevronsRight, List, LayoutGrid
+} from 'lucide-react';
 import { Language, translations } from '../translations';
 import { OnuFilters } from '../services/onuService';
 
@@ -20,135 +25,146 @@ const OnuFiltersBar: React.FC<OnuFiltersProps> = ({ language, filters, onFilterC
     onFilterChange({ [name]: value, page: 1 });
   };
 
-  const handleStatusToggle = (status: string) => {
-    onFilterChange({ status: filters.status === status ? 'any' : status, page: 1 });
+  const handlePageChange = (newPage: number) => {
+    onFilterChange({ page: newPage });
   };
 
-  const handleModeToggle = (mode: string) => {
-    onFilterChange({ mode: filters.mode === mode ? 'any' : mode, page: 1 });
-  };
+  const lastPage = Math.max(1, Math.ceil(totalFound / (filters.limit || 100)));
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-4">
-      {/* Search and Primary Actions */}
-      <div className="flex flex-col xl:flex-row gap-4">
-        <div className="relative flex-1 group">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+    <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 space-y-3 font-inter">
+      {/* Row 1: Search and Main Hardware Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 min-w-[200px] flex-1">
+          <label className="text-[11px] font-bold text-slate-500">Search</label>
           <input 
             type="text" 
             name="search"
             value={filters.search || ''}
             onChange={handleInputChange}
             placeholder={t.searchPlaceholder} 
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" 
+            className="flex-1 bg-white border border-slate-200 rounded px-2 py-1 text-xs outline-none focus:border-blue-500" 
           />
         </div>
-        
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 xl:pb-0 no-scrollbar">
-          {/* Status Selectors */}
-          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-            <button 
-              onClick={() => handleStatusToggle('online')}
-              title="Online"
-              className={`p-2 rounded-lg transition-all ${filters.status === 'online' ? 'bg-green-500 text-white shadow-md shadow-green-500/20' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              <div className={`w-3 h-3 rounded-full ${filters.status === 'online' ? 'bg-white' : 'bg-green-500'}`}></div>
-            </button>
-            <button 
-              onClick={() => handleStatusToggle('offline')}
-              title="Offline"
-              className={`p-2 rounded-lg transition-all ${filters.status === 'offline' ? 'bg-slate-500 text-white shadow-md shadow-slate-500/20' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              <div className={`w-3 h-3 rounded-full ${filters.status === 'offline' ? 'bg-white' : 'bg-slate-400'}`}></div>
-            </button>
-            <button 
-              onClick={() => handleStatusToggle('los')}
-              title="Signal Loss (LOS)"
-              className={`p-2 rounded-lg transition-all ${filters.status === 'los' ? 'bg-red-500 text-white shadow-md shadow-red-500/20' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              <Wifi size={14} className={filters.status === 'los' ? 'text-white' : 'text-red-500'} />
-            </button>
+
+        <FilterSelect label="OLT" name="olt_id" value={filters.olt_id} onChange={handleInputChange} options={['Any', 'PGM - Jetz', 'ULI - Jetz']} />
+        <FilterSelect label="Board" name="board" value={filters.board} onChange={handleInputChange} options={['Any', '0', '1']} />
+        <FilterSelect label="Port" name="port" value={filters.port} onChange={handleInputChange} options={['Any', '1', '2', '3']} />
+        <FilterSelect label="Zone" name="zone" value={filters.zone} onChange={handleInputChange} options={['Any', 'CEO-001', 'CEO-092']} />
+        <FilterSelect label="ODB" name="odb" value={filters.odb} onChange={handleInputChange} options={['Any', 'None', 'ODB-01']} />
+        <FilterSelect label="VLAN" name="vlan" value={filters.vlan} onChange={handleInputChange} options={['Any', '11', '100']} />
+      </div>
+
+      {/* Row 2: Logic and Status Icons */}
+      <div className="flex flex-wrap items-center gap-4">
+        <FilterSelect label="ONU type" name="onu_type" value={filters.onu_type} onChange={handleInputChange} options={['Any', 'EG8010H', 'EG8145X6']} />
+        <FilterSelect label="Profile" name="profile" value={filters.profile} onChange={handleInputChange} options={['Any', '300M_PLAN', '600M_PLAN']} />
+        <FilterSelect label="PON type" name="pon_type" value={filters.pon_type} onChange={handleInputChange} options={['Any', 'GPON', 'EPON']} />
+
+        <div className="flex items-center gap-3">
+          <label className="text-[11px] font-bold text-slate-500">Status</label>
+          <div className="flex items-center gap-1.5">
+            <StatusIcon color="text-green-500" active={filters.status === 'online'} onClick={() => onFilterChange({status: 'online'})} icon={<Globe size={14}/>} />
+            <StatusIcon color="text-slate-500" active={filters.status === 'offline'} onClick={() => onFilterChange({status: 'offline'})} icon={<Settings2 size={14}/>} />
+            <StatusIcon color="text-red-500" active={filters.status === 'los'} onClick={() => onFilterChange({status: 'los'})} icon={<Wifi size={14}/>} />
+            <StatusIcon color="text-blue-500" active={filters.status === 'na'} onClick={() => onFilterChange({status: 'na'})} icon={<Globe size={14}/>} />
+            <StatusIcon color="text-slate-800" active={filters.status === 'dying'} onClick={() => onFilterChange({status: 'dying'})} icon={<Settings2 size={14}/>} />
           </div>
+        </div>
 
-          <div className="h-8 w-px bg-slate-200 mx-1"></div>
-
-          {/* Mode Toggles */}
-          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-            <button 
-              onClick={() => handleModeToggle('Bridge')}
-              className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${filters.mode === 'Bridge' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'}`}
-            >
-              B
-            </button>
-            <button 
-              onClick={() => handleModeToggle('Router')}
-              className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${filters.mode === 'Router' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'}`}
-            >
-              R
-            </button>
+        <div className="flex items-center gap-3">
+          <label className="text-[11px] font-bold text-slate-500">Signal</label>
+          <div className="flex items-center gap-1">
+             <SignalBtn color="text-green-500" level={3} active={filters.signal_level === 'good'} onClick={() => onFilterChange({signal_level: 'good'})} />
+             <SignalBtn color="text-orange-500" level={2} active={filters.signal_level === 'warning'} onClick={() => onFilterChange({signal_level: 'warning'})} />
+             <SignalBtn color="text-red-500" level={1} active={filters.signal_level === 'critical'} onClick={() => onFilterChange({signal_level: 'critical'})} />
           </div>
+        </div>
 
-          <button 
-            onClick={onClear}
-            className="p-2.5 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors"
-            title="Reset Filters"
-          >
-            <Filter size={18} />
-          </button>
+        <div className="flex items-center gap-1">
+          <button className="px-3 py-1 bg-white border border-slate-200 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50">B</button>
+          <button className="px-3 py-1 bg-white border border-slate-200 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50">R</button>
+        </div>
 
-          <div className="flex items-center gap-2 ml-2 whitespace-nowrap">
-             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">
-               {totalFound.toLocaleString()} {language === 'en' ? 'DEVICES FOUND' : 'DISPOSITIVOS'}
-             </span>
-          </div>
+        <div className="flex items-center gap-1 ml-auto">
+          <button className="p-1.5 bg-white border border-slate-200 rounded text-slate-400 hover:text-blue-600"><List size={14}/></button>
+          <button className="p-1.5 bg-blue-600 border border-blue-700 rounded text-white shadow-sm"><LayoutGrid size={14}/></button>
+          <button className="p-1.5 text-blue-600"><ChevronRight size={16}/></button>
         </div>
       </div>
 
-      {/* Grid of Dropdowns */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-3">
-        <FilterDropdown label="OLT" name="olt_id" value={filters.olt_id} onChange={handleInputChange} icon={<Globe size={12}/>} />
-        <FilterDropdown label="BOARD" name="board" value={filters.board} onChange={handleInputChange} icon={<Layers size={12}/>} />
-        <FilterDropdown label="PORT" name="port" value={filters.port} onChange={handleInputChange} icon={<Hash size={12}/>} />
-        <FilterDropdown label="ZONE" name="zone" value={filters.zone} onChange={handleInputChange} icon={<Layers size={12}/>} />
-        <FilterDropdown label="ODB" name="odb" value={filters.odb} onChange={handleInputChange} icon={<Hash size={12}/>} />
-        <FilterDropdown label="VLAN" name="vlan" value={filters.vlan} onChange={handleInputChange} icon={<Layers size={12}/>} />
-        <FilterDropdown label="ONU TYPE" name="onu_type" value={filters.onu_type} onChange={handleInputChange} icon={<Monitor size={12}/>} />
-        <FilterDropdown label="PROFILE" name="profile" value={filters.profile} onChange={handleInputChange} icon={<Signal size={12}/>} />
-        <FilterDropdown label="SIGNAL" name="signal_level" value={filters.signal_level} onChange={handleInputChange} icon={<Signal size={12}/>} />
+      {/* Row 3: Management and Export */}
+      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
+        <FilterSelect label="Mgmt IP" name="mgmt_ip" value={filters.mgmt_ip} onChange={handleInputChange} options={['Any']} />
+        <FilterSelect label="TR-069" name="tr069" value={filters.tr069} onChange={handleInputChange} options={['Any']} />
+        <FilterSelect label="VoIP" name="voip" value={filters.voip} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
+        <FilterSelect label="CATV" name="catv" value={filters.catv} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
+        <FilterSelect label="Download" name="download" value={filters.download} onChange={handleInputChange} options={['Any']} />
+        <FilterSelect label="Upload" name="upload" value={filters.upload} onChange={handleInputChange} options={['Any']} />
+
+        <button className="ml-auto flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-4 py-1.5 rounded shadow-sm transition-all">
+          <FileOutput size={14} /> {t.export}
+        </button>
+      </div>
+
+      {/* Pagination Row */}
+      <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5, 6].map(p => (
+            <button 
+              key={p}
+              onClick={() => handlePageChange(p)}
+              className={`w-7 h-7 flex items-center justify-center rounded text-xs font-medium border ${filters.page === p ? 'bg-slate-200 border-slate-300 text-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+            >
+              {p}
+            </button>
+          ))}
+          <button className="w-7 h-7 flex items-center justify-center rounded bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"><ChevronRight size={14}/></button>
+          <button className="w-10 h-7 flex items-center justify-center rounded bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 text-[10px] font-bold">&gt;&gt;</button>
+        </div>
+        
+        <div className="text-[11px] font-bold text-slate-700 uppercase">
+          1-100 ONUs of {totalFound.toLocaleString()} displayed
+        </div>
       </div>
     </div>
   );
 };
 
-const FilterDropdown = ({ label, name, value, onChange, icon }: { label: string, name: string, value: string | undefined, onChange: any, icon: React.ReactNode }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 ml-1">
-      {icon} {label}
-    </label>
+const FilterSelect = ({ label, name, value, onChange, options }: any) => (
+  <div className="flex items-center gap-1.5">
+    <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">{label}</label>
     <select 
       name={name}
-      value={value || 'any'}
+      value={value || 'Any'}
       onChange={onChange}
-      className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 text-[11px] font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all appearance-none cursor-pointer"
+      className="bg-white border border-slate-200 rounded px-1 py-1 text-xs text-slate-700 outline-none focus:border-blue-500 min-w-[80px]"
     >
-      <option value="any">Any</option>
-      {/* Mocking dynamic data for the dropdowns */}
-      {name === 'olt_id' && (
-        <>
-          <option value="1">PGM - Jetz</option>
-          <option value="2">ULI - Jetz</option>
-          <option value="3">DEU - Jetz</option>
-        </>
-      )}
-      {name === 'signal_level' && (
-        <>
-          <option value="weak">Weak (&lt; -25 dBm)</option>
-          <option value="medium">Medium (-25 to -20 dBm)</option>
-          <option value="strong">Strong (&gt; -20 dBm)</option>
-        </>
-      )}
+      {options.map((opt: string) => (
+        <option key={opt} value={opt === 'Any' ? 'any' : opt}>{opt}</option>
+      ))}
     </select>
   </div>
+);
+
+const StatusIcon = ({ color, active, onClick, icon }: any) => (
+  <button 
+    onClick={onClick}
+    className={`p-1 rounded border transition-all ${active ? 'bg-blue-600 border-blue-700 text-white' : `bg-white border-slate-200 ${color} hover:bg-slate-50`}`}
+  >
+    {icon}
+  </button>
+);
+
+const SignalBtn = ({ color, level, active, onClick }: any) => (
+  <button 
+    onClick={onClick}
+    className={`p-1 rounded border flex items-end gap-0.5 transition-all ${active ? 'bg-blue-600 border-blue-700 text-white' : `bg-white border-slate-200 ${color} hover:bg-slate-50`}`}
+  >
+    {[1, 2, 3].map(i => (
+      <div key={i} className={`w-1 rounded-sm ${i <= level ? 'bg-current' : 'bg-slate-200'} ${i === 1 ? 'h-1.5' : i === 2 ? 'h-2.5' : 'h-3.5'}`} />
+    ))}
+  </button>
 );
 
 export default OnuFiltersBar;

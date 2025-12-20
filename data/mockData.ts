@@ -31,10 +31,11 @@ export const mockOutages: PONOutage[] = [
 ];
 
 export const mockONUs: ONU[] = [
-  { id: 'onu1', name: 'adrianaap', sn: 'HWTC9D70C5B4', olt: 'ULI - Jetz', pon: '0/2/0:33', zone: 'CEO-U09', odb: 'None', signal: -18.5, mode: 'Router', vlan: 100, type: 'EG8145X6-10', authDate: '02-12-2024', status: 'online' },
-  { id: 'onu2', name: 'limaa', sn: 'HWTC6C8B83A5', olt: 'PGM - Jetz', pon: '0/12/1:19', zone: 'CEO-165', odb: 'None', signal: -21.2, mode: 'Bridge', vlan: 11, type: 'EG8010H', authDate: '02-12-2024', status: 'online' },
-  { id: 'onu3', name: 'carlosnuns', sn: 'HWTC7BAA3CAA', olt: 'PGM - Jetz', pon: '0/3/1:3', zone: 'CEO-097', odb: 'None', signal: -24.1, mode: 'Bridge', vlan: 11, type: 'EG8010H', authDate: '02-12-2024', status: 'online' },
-  { id: 'onu4', name: 'antoniomurilo', sn: 'HWTC6C8D39A5', olt: 'PGM - Jetz', pon: '0/1/0:37', zone: 'CEO-015', odb: 'None', signal: -19.8, mode: 'Bridge', vlan: 11, type: 'EG8010H', authDate: '02-12-2024', status: 'online' }
+  { id: 'onu1', name: 'valdodocunha', sn: 'HWTCE44BFC9A', olt: 'PGM - Jetz', pon: '0/5/11:32', zone: 'CEO 009', odb: 'None', signal: -28.5, mode: 'Router', vlan: 11, type: 'ONU-type-eth-1-pots-2-catv-0', authDate: '02-12-2025', status: 'offline' },
+  { id: 'onu2', name: 'valdodocunha', sn: 'HWTC157D42A4', olt: 'PGM - Jetz', pon: '0/5/11:40', zone: 'CEO 009', odb: 'None', signal: -19.2, mode: 'Bridge', vlan: 11, type: 'EG8010H', authDate: '02-12-2025', status: 'online' },
+  { id: 'onu3', name: 'franciscosvieira', sn: 'HWTCF813D8A7', olt: 'PGM - Jetz', pon: '0/2/12:30', zone: 'CEO 092', odb: 'None', signal: -24.1, mode: 'Bridge', vlan: 11, type: 'EG8010H', authDate: '02-12-2025', status: 'online' },
+  { id: 'onu4', name: 'laislucena', sn: 'HWTC36F5BDAE', olt: 'PGM - Jetz', pon: '0/1/4:25', zone: 'CEO 001', odb: 'None', signal: -18.8, mode: 'Router', vlan: 11, type: 'EG8145X6-10', authDate: '02-12-2025', status: 'online' },
+  { id: 'onu5', name: 'naila', sn: 'HWTCF487A59F', olt: 'PGM - Jetz', pon: '0/1/4:26', zone: 'CEO 120', odb: 'None', signal: -21.4, mode: 'Router', vlan: 11, type: 'HG8245Q2', authDate: '02-12-2025', status: 'online' }
 ];
 
 export const networkStatusData = [

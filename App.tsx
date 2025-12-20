@@ -21,12 +21,6 @@ const AppContent: React.FC = () => {
   const [language, setLanguage] = useState<Language>('en');
   const t = translations[language];
 
-  const handleLoginSuccess = () => {
-    // Auth context will automatically pick up user from localStorage on reload
-    // but in a single session we usually refresh state or rely on context
-    window.location.reload(); 
-  };
-
   const renderProtectedView = (viewId: ViewType, permission: Permission, component: React.ReactNode) => {
     if (hasPermission(permission)) {
       return component;
@@ -79,8 +73,9 @@ const AppContent: React.FC = () => {
     }
   };
 
+  // Se não estiver autenticado, o Contexto já gerencia o estado e exibe o LoginView
   if (!isAuthenticated) {
-    return <LoginView onLoginSuccess={handleLoginSuccess} />;
+    return <LoginView />;
   }
 
   return (
