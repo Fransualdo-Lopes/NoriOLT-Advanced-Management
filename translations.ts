@@ -50,7 +50,22 @@ export const translations = {
     authDate: "Auth Date",
     maintenanceTitle: "NoriCore Upgrade in Progress",
     maintenanceDesc: "module is currently receiving a precision update for Nori-Engine 2.5 compatibility.",
-    returnConsole: "Return to Console"
+    returnConsole: "Return to Console",
+    autoActions: "Auto actions",
+    configureActions: "Configure actions",
+    taskHistory: "Task history",
+    stopAuto: "Stop auto actions",
+    noUnconfigured: "No unconfigured ONUs found on current scan.",
+    authorizationPresets: "Authorization Presets",
+    managePresets: "Manage presets for quick ONU authorization",
+    addLater: "Add ONU for later authorization",
+    ponType: "PON Type",
+    board: "Board",
+    port: "Port",
+    ponDescription: "PON Description",
+    sn: "SN",
+    viewOnu: "View ONU",
+    resync: "Resync config"
   },
   pt: {
     dashboard: "Painel",
@@ -102,7 +117,22 @@ export const translations = {
     authDate: "Data de Aut.",
     maintenanceTitle: "Upgrade NoriCore em Progresso",
     maintenanceDesc: "está recebendo uma atualização de precisão para compatibilidade com Nori-Engine 2.5.",
-    returnConsole: "Voltar ao Console"
+    returnConsole: "Voltar ao Console",
+    autoActions: "Ações automáticas",
+    configureActions: "Configurar ações",
+    taskHistory: "Histórico de tarefas",
+    stopAuto: "Parar ações automáticas",
+    noUnconfigured: "Nenhuma ONU não configurada encontrada na varredura atual.",
+    authorizationPresets: "Presets de Autorização",
+    managePresets: "Gerencie presets para autorização rápida",
+    addLater: "Adicionar ONU para autorização posterior",
+    ponType: "Tipo PON",
+    board: "Placa",
+    port: "Porta",
+    ponDescription: "Descrição PON",
+    sn: "SN",
+    viewOnu: "Ver ONU",
+    resync: "Resinc. config"
   }
 };
 

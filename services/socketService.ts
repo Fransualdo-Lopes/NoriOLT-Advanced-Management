@@ -1,6 +1,5 @@
 
 import { CONFIG } from '../config';
-import { SystemAlarm } from '../types';
 
 type MessageHandler = (data: any) => void;
 

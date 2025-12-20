@@ -19,7 +19,6 @@ export interface OltHardware {
   boards_count: number;
 }
 
-// Added OLT interface for dashboard lists and panels
 export interface OLT {
   id: string;
   name: string;
@@ -32,56 +31,48 @@ export interface OLT {
 export type OnuStatus = 'online' | 'offline' | 'los' | 'dying-gasp' | 'unconfigured';
 export type OnuMode = 'Bridge' | 'Router';
 
-export interface OnuSignalData {
-  rx_power: number; // dBm
-  tx_power: number; // dBm
-  temp: number;
-  voltage: number;
-  bias_current: number;
+export interface UnconfiguredONU {
+  id: string;
+  sn: string;
+  pon_type: 'GPON' | 'EPON' | 'XGS-PON';
+  board: number;
+  port: number;
+  pon_description: string;
+  model: string;
+  olt_id: string;
+  olt_name: string;
+  supports_immediate_auth: boolean;
 }
 
-// Updated ONU interface to include properties used in mock data and components
 export interface ONU {
   id: string;
   sn: string;
   name: string;
   olt_id?: string;
   olt_name?: string;
-  olt?: string; // used in mockData/components
+  olt?: string;
   board?: number;
   port?: number;
   onu_index?: number;
-  pon_path?: string; // e.g. 0/1/2
-  pon?: string; // used in mockData/components
-  zone?: string; // used in mockData/components
-  odb?: string; // used in mockData
+  pon_path?: string;
+  pon?: string;
+  zone?: string;
+  odb?: string;
   vlan: number;
   mode: OnuMode;
   status: OnuStatus;
   signal: number;
-  type?: string; // used in mockData/components
-  authDate?: string; // used in mockData/components
+  type?: string;
+  authDate?: string;
   last_online?: string;
   last_offline?: string;
   firmware_version?: string;
-  distance?: number; // km
+  distance?: number;
 }
 
 // --- Alarm & Event Types ---
 export type Severity = 'critical' | 'major' | 'minor' | 'info';
 
-export interface SystemAlarm {
-  id: string;
-  severity: Severity;
-  source_id: string; // OltID or OnuID
-  source_type: 'OLT' | 'ONU' | 'SYSTEM';
-  code: string;
-  message: string;
-  timestamp: string;
-  is_acknowledged: boolean;
-}
-
-// Added ActivityEvent for system and network logging
 export interface ActivityEvent {
   id: string;
   message: string;
@@ -89,31 +80,7 @@ export interface ActivityEvent {
   type: 'error' | 'warning' | 'success' | 'info';
 }
 
-// --- Provisioning Payload ---
-export interface ProvisioningTask {
-  sn: string;
-  name: string;
-  olt_id: string;
-  board: number;
-  port: number;
-  vlan: number;
-  mode: OnuMode;
-  profile_id: string;
-}
-
-// Added OnuProvisionPayload for the provisioning form component
-export interface OnuProvisionPayload {
-  olt_id: string;
-  board: number;
-  port: number;
-  sn: string;
-  name: string;
-  mode: string;
-  vlan: number;
-  profile: string;
-}
-
-// --- Dashboard Summary Types ---
+// --- Summary & Dashboard ---
 export interface SummaryStats {
   waitingAuth: number;
   waitingSub: { d: number; resync: number; new: number };
@@ -125,16 +92,15 @@ export interface SummaryStats {
   lowSignalSub: { warning: number; critical: number };
 }
 
-// Added PONOutage for tracking network incidents
 export interface PONOutage {
   id: string;
   oltName: string;
   boardPort: string;
   onusAffected: number;
+  since: string;
+  cause: string;
   los: number;
   power: number;
-  cause: string;
-  since: string;
 }
 
 // --- Auth Types ---
@@ -155,5 +121,15 @@ export interface AuthResponse {
   user: User;
 }
 
-// --- Application View States ---
+export interface OnuProvisionPayload {
+  olt_id: string;
+  board: number;
+  port: number;
+  sn: string;
+  name: string;
+  mode: string;
+  vlan: number;
+  profile: string;
+}
+
 export type ViewType = 'dashboard' | 'unconfigured' | 'configured' | 'graphs' | 'diagnostics' | 'provisioning';

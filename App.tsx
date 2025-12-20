@@ -7,6 +7,7 @@ import { authService } from './services/authService';
 import Layout from './components/Layout';
 import DashboardView from './views/DashboardView';
 import ConfiguredView from './views/ConfiguredView';
+import UnconfiguredView from './views/UnconfiguredView';
 import OnuProvisionForm from './components/OnuProvisionForm';
 import MaintenanceView from './views/MaintenanceView';
 import LoginView from './views/LoginView';
@@ -33,6 +34,8 @@ const App: React.FC = () => {
         return <DashboardView language={language} />;
       case 'configured':
         return <ConfiguredView language={language} onAddOnu={() => setActiveView('provisioning')} />;
+      case 'unconfigured':
+        return <UnconfiguredView language={language} />;
       case 'provisioning':
         return (
           <div className="animate-in fade-in zoom-in duration-300">
