@@ -46,9 +46,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
                 <Globe className="text-white" size={24} />
               </div>
-              <h1 className="text-xl font-black tracking-tighter italic uppercase transition-colors">
-                Nori<span className="text-blue-400">OLT</span> 
-                <span className="text-slate-500 font-normal ml-1.5 text-[10px] tracking-widest bg-slate-800 px-2 py-0.5 rounded border border-slate-700">ADVANCED</span>
+              <h1 className="text-xl font-black tracking-tighter italic transition-colors">
+                Nori<span className="text-blue-400">OLT</span>
               </h1>
             </div>
 
