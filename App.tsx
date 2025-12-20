@@ -13,6 +13,7 @@ import OnuProvisionForm from './components/OnuProvisionForm';
 import MaintenanceView from './views/MaintenanceView';
 import LoginView from './views/LoginView';
 import AccessDeniedView from './views/AccessDeniedView';
+import PresetManagerView from './views/PresetManagerView';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated, logout, hasPermission, user } = useAuth();
@@ -60,6 +61,12 @@ const AppContent: React.FC = () => {
               onSuccess={() => setActiveView('configured')}
             />
           </div>
+        );
+      case 'presets':
+        return renderProtectedView(
+          'presets',
+          Permission.MANAGE_OLT, // Assuming OLT management covers presets
+          <PresetManagerView language={language} />
         );
       default:
         return (

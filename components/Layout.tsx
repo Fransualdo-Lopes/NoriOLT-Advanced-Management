@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { 
   Globe, LayoutGrid, Wand2, CheckCircle, BarChart2, Activity, 
-  Bell, LogOut, Menu, X, ShieldCheck 
+  Bell, LogOut, Menu, X, ShieldCheck, Zap
 } from 'lucide-react';
 import { ViewType } from '../types';
 import { Language, translations } from '../translations';
@@ -27,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
     { id: 'dashboard', label: t.dashboard, icon: LayoutGrid, permission: null },
     { id: 'unconfigured', label: t.unconfigured, icon: Wand2, permission: Permission.VIEW_UNCONFIGURED },
     { id: 'configured', label: t.configured, icon: CheckCircle, permission: Permission.VIEW_CONFIGURED },
+    { id: 'presets', label: t.presets, icon: Zap, permission: Permission.MANAGE_OLT },
     { id: 'graphs', label: t.graphs, icon: BarChart2, permission: Permission.VIEW_OLT_STATS },
     { id: 'diagnostics', label: t.diagnostics, icon: Activity, permission: Permission.VIEW_OLT_STATS },
   ];

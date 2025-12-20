@@ -1,20 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, X, Server, Hash, Settings2, Loader2, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Save, X, Server, Hash, Settings2, Loader2, CheckCircle2, AlertTriangle, ShieldCheck, Zap } from 'lucide-react';
 import { Language, translations } from '../translations';
 import { oltService } from '../services/oltService';
 import { provisioningService } from '../services/provisioningService';
-import { OLT, OnuProvisionPayload } from '../types';
+import { presetService } from '../services/presetService';
+import { OLT, OnuProvisionPayload, ProvisioningPreset } from '../types';
 
 interface OnuProvisionFormProps {
   language: Language;
   onCancel: () => void;
   onSuccess: () => void;
+  initialSn?: string; // For auto-fill from unconfigured view
 }
 
-const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel, onSuccess }) => {
+const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel, onSuccess, initialSn }) => {
   const t = translations[language];
   const [olts, setOlts] = useState<OLT[]>([]);
+  const [presets, setPresets] = useState<ProvisioningPreset[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -23,7 +26,7 @@ const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel,
     olt_id: '',
     board: 0,
     port: 0,
-    sn: '',
+    sn: initialSn || '',
     name: '',
     mode: 'Router',
     vlan: 100,
@@ -31,10 +34,14 @@ const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel,
   });
 
   useEffect(() => {
-    oltService.getOlts().then(data => {
-      setOlts(data);
-      if (data.length > 0) {
-        setFormData(prev => ({ ...prev, olt_id: data[0].id }));
+    Promise.all([
+      oltService.getOlts(),
+      presetService.getPresets()
+    ]).then(([oltData, presetData]) => {
+      setOlts(oltData);
+      setPresets(presetData);
+      if (oltData.length > 0) {
+        setFormData(prev => ({ ...prev, olt_id: oltData[0].id }));
       }
     });
   }, []);
@@ -44,6 +51,19 @@ const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel,
     setFormData(prev => ({
       ...prev,
       [name]: name === 'board' || name === 'port' || name === 'vlan' ? parseInt(value) || 0 : value
+    }));
+  };
+
+  const applyPreset = (presetId: string) => {
+    const preset = presets.find(p => p.id === presetId);
+    if (!preset) return;
+
+    setFormData(prev => ({
+      ...prev,
+      mode: preset.mode,
+      vlan: preset.vlan,
+      profile: preset.service_profile, // Mapping service profile to the profile field for simplicity in mock
+      preset_id: presetId
     }));
   };
 
@@ -107,6 +127,22 @@ const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel,
         </button>
       </div>
       
+      <div className="bg-blue-50/50 p-4 border-b border-blue-100/30 flex items-center gap-4">
+        <div className="flex items-center gap-2 text-[10px] font-black text-blue-600 uppercase tracking-widest whitespace-nowrap">
+          <Zap size={14} className="fill-current" /> {t.applyPreset}:
+        </div>
+        <select 
+          onChange={(e) => applyPreset(e.target.value)}
+          className="bg-white border border-blue-200 rounded-xl px-3 py-1.5 text-xs font-bold text-blue-700 outline-none focus:ring-2 focus:ring-blue-500/10 transition-all flex-1 md:flex-none md:min-w-[200px]"
+          defaultValue=""
+        >
+          <option value="" disabled>Choose a template...</option>
+          {presets.map(p => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+      </div>
+
       <form onSubmit={handleSubmit} className="p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Hardware Connection Section */}
@@ -211,7 +247,7 @@ const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel,
                     type="number" 
                     value={formData.vlan}
                     onChange={handleChange}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all" 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-black text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all" 
                   />
                 </div>
               </div>

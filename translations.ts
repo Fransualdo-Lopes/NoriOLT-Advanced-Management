@@ -7,6 +7,7 @@ export const translations = {
     graphs: "Graphs",
     diagnostics: "Diagnostics",
     provisioning: "Provisioning",
+    presets: "Presets",
     waitingAuth: "Waiting authorization",
     online: "Online",
     totalOffline: "Total offline",
@@ -65,7 +66,20 @@ export const translations = {
     ponDescription: "PON Description",
     sn: "SN",
     viewOnu: "View ONU",
-    resync: "Resync config"
+    resync: "Resync config",
+    createPreset: "Create Preset",
+    editPreset: "Edit Preset",
+    deletePreset: "Delete Preset",
+    lineProfile: "Line Profile",
+    serviceProfile: "Service Profile",
+    onuType: "ONU Type",
+    compatibleWith: "Compatible with",
+    services: "Services",
+    voip: "VoIP",
+    tv: "TV",
+    pppoe: "PPPoE",
+    noPresets: "No presets found.",
+    applyPreset: "Apply Preset"
   },
   pt: {
     dashboard: "Painel",
@@ -74,6 +88,7 @@ export const translations = {
     graphs: "Gráficos",
     diagnostics: "Diagnósticos",
     provisioning: "Provisionamento",
+    presets: "Presets",
     waitingAuth: "Aguardando autorização",
     online: "Online",
     totalOffline: "Total offline",
@@ -132,7 +147,20 @@ export const translations = {
     ponDescription: "Descrição PON",
     sn: "SN",
     viewOnu: "Ver ONU",
-    resync: "Resinc. config"
+    resync: "Resinc. config",
+    createPreset: "Criar Preset",
+    editPreset: "Editar Preset",
+    deletePreset: "Excluir Preset",
+    lineProfile: "Perfil de Linha",
+    serviceProfile: "Perfil de Serviço",
+    onuType: "Modelo ONU",
+    compatibleWith: "Compatível com",
+    services: "Serviços",
+    voip: "VoIP",
+    tv: "TV",
+    pppoe: "PPPoE",
+    noPresets: "Nenhum preset encontrado.",
+    applyPreset: "Aplicar Preset"
   }
 };
 

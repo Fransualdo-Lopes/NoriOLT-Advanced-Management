@@ -70,6 +70,23 @@ export interface ONU {
   distance?: number;
 }
 
+// --- Preset Types ---
+export interface ProvisioningPreset {
+  id: string;
+  name: string;
+  onu_type: string; // Compatible ONU model
+  line_profile: string;
+  service_profile: string;
+  vlan: number;
+  mode: OnuMode;
+  pppoe_enabled: boolean;
+  voip_enabled: boolean;
+  tv_enabled: boolean;
+  wifi_ssid_suffix?: string;
+  description: string;
+  created_at: string;
+}
+
 // --- Alarm & Event Types ---
 export type Severity = 'critical' | 'major' | 'minor' | 'info';
 
@@ -130,6 +147,7 @@ export interface OnuProvisionPayload {
   mode: string;
   vlan: number;
   profile: string;
+  preset_id?: string;
 }
 
-export type ViewType = 'dashboard' | 'unconfigured' | 'configured' | 'graphs' | 'diagnostics' | 'provisioning';
+export type ViewType = 'dashboard' | 'unconfigured' | 'configured' | 'graphs' | 'diagnostics' | 'provisioning' | 'presets';
