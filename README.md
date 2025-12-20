@@ -67,8 +67,8 @@ For more details, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-org/nori-olt.git
-   cd nori-olt
+   git clone https://github.com/Fransualdo-Lopes/NoriOLT-Advanced-Management.git
+   cd NoriOLT-Advanced-Management
    ```
 
 2. Install dependencies:
