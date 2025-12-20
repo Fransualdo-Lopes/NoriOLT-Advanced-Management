@@ -26,7 +26,7 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('nori_auth_token');
-      // Redirect logic if necessary
+      // In a real app, you might trigger a redirect to login here
     }
     return Promise.reject(error);
   }

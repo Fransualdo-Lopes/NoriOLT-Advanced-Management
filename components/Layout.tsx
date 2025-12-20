@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { 
   Globe, LayoutGrid, Wand2, CheckCircle, BarChart2, Activity, 
-  Bell, LogOut, Menu, X, ShieldCheck, Languages 
+  Bell, LogOut, Menu, X, ShieldCheck 
 } from 'lucide-react';
 import { ViewType } from '../types';
 import { Language, translations } from '../translations';
@@ -13,9 +13,10 @@ interface LayoutProps {
   setActiveView: (view: ViewType) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
+  onLogout: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, language, setLanguage }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, language, setLanguage, onLogout }) => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const t = translations[language];
 
@@ -68,7 +69,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Language Switcher */}
             <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1 border border-slate-700">
                <button 
                  onClick={() => setLanguage('en')}
@@ -99,7 +99,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
                 <p className="text-xs font-bold leading-tight">{t.admin}</p>
                 <p className="text-[10px] text-slate-500 font-medium">{t.role}</p>
               </div>
-              <button className="bg-slate-800 p-2 rounded-full border border-slate-700 hover:bg-slate-700 transition-colors">
+              <button 
+                onClick={onLogout}
+                className="bg-slate-800 p-2 rounded-full border border-slate-700 hover:bg-slate-700 transition-colors"
+              >
                 <LogOut size={18} className="text-slate-400" />
               </button>
             </div>
@@ -142,11 +145,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
                <Activity size={10} /> ENGINE: ACTIVE
              </div>
            </div>
-           
            <div className="text-center hidden lg:block text-slate-300">
              © 2025 NORI-OLT ADVANCED PLATFORMS. PRECISE NETWORK ENGINEERING.
            </div>
-           
            <div className="flex items-center gap-6">
              <a href="#" className="text-slate-500 hover:text-blue-500 transition-colors">Provisioning API</a>
              <a href="#" className="text-slate-500 hover:text-blue-500 transition-colors">Documentation</a>

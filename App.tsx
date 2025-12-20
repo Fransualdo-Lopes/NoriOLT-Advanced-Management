@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { ViewType } from './types';
 import { Language, translations } from './translations';
@@ -64,6 +64,7 @@ const App: React.FC = () => {
       setActiveView={setActiveView}
       language={language}
       setLanguage={setLanguage}
+      onLogout={handleLogout}
     >
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-6">
