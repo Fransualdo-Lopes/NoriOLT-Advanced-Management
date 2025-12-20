@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   RefreshCcw, History, Search, 
   PlusCircle, BookOpen, Loader2, Server,
@@ -10,6 +10,7 @@ import { UnconfiguredONU, OLT } from '../types';
 import { unconfiguredOnuService } from '../services/unconfiguredOnuService';
 import { oltService } from '../services/oltService';
 import { provisioningService } from '../services/provisioningService';
+import { usePolling } from '../hooks/usePolling';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 interface UnconfiguredViewProps {
@@ -32,9 +33,12 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
   // Notification State
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
-  const fetchOnus = async (isManual = false) => {
+  /**
+   * Main data fetcher
+   * @param isManual Se true, exibe o spinner no botão de refresh. Se false, é um polling silencioso.
+   */
+  const fetchData = useCallback(async (isManual = false) => {
     if (isManual) setIsRefreshing(true);
-    else setLoading(true);
     
     try {
       const [pendingOnus, oltList] = await Promise.all([
@@ -49,11 +53,17 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
       setLoading(false);
       setIsRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    fetchOnus();
   }, [filterOltId]);
+
+  // Initial load when filter changes
+  useEffect(() => {
+    setLoading(true);
+    fetchData();
+  }, [filterOltId, fetchData]);
+
+  // Setup auto-refresh every 30 seconds
+  // Polling is paused if a modal is open or if we're currently authorizing to avoid UI jitters
+  usePolling(() => fetchData(false), 30000, !isAuthModalOpen && !isAuthorizing);
 
   const groupedOnus = useMemo(() => {
     return onus.reduce((acc, onu) => {
@@ -131,8 +141,9 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
           </div>
           
           <button 
-            onClick={() => fetchOnus(true)}
-            className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-green-600/10 uppercase tracking-widest"
+            onClick={() => fetchData(true)}
+            disabled={isRefreshing}
+            className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-green-600/10 uppercase tracking-widest disabled:opacity-70"
           >
             {isRefreshing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCcw size={16} />}
             {t.refresh}
