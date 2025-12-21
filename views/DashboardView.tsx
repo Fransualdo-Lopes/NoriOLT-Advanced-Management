@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, ChevronRight } from 'lucide-react';
 import DashboardStats from '../components/DashboardStats';
 import { NetworkStatusChart, AuthorizationsChart } from '../components/Charts';
 import OltList from '../components/OltList';
@@ -17,12 +17,11 @@ const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Dynamic Stats Section consuming REST API endpoints */}
       <DashboardStats language={language} />
 
-      <div className="flex justify-between items-center text-[10px] text-gray-400 uppercase tracking-widest font-bold px-1">
+      <div className="flex justify-between items-center text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black px-1">
         <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
           <span>{t.integrity}: 98.4%</span>
         </div>
         <span>{t.telemetry} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -33,14 +32,19 @@ const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
           <NetworkStatusChart />
           <AuthorizationsChart />
           
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-slate-900 text-white p-3.5 flex items-center gap-2">
-              <ShieldAlert size={18} className="text-red-400" />
-              <h3 className="font-bold text-xs uppercase tracking-wider">{t.incidents}</h3>
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldAlert size={18} className="text-red-400" />
+                <h3 className="font-black text-xs uppercase tracking-widest">{t.incidents}</h3>
+              </div>
+              <button className="text-[10px] font-black uppercase text-blue-400 flex items-center gap-1">
+                Manage Cluster <ChevronRight size={12} />
+              </button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold uppercase tracking-tighter">
+                <thead className="bg-slate-50 border-b border-slate-100 text-slate-400 font-black uppercase tracking-widest">
                   <tr>
                     <th className="p-4">{t.oltCluster}</th>
                     <th className="p-4 text-center">{t.reference}</th>
@@ -51,16 +55,16 @@ const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
                     <th className="p-4">{t.duration}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-slate-50 font-semibold text-slate-700">
                   {mockOutages.map(outage => (
                     <tr key={outage.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-4 font-bold text-slate-800">{outage.oltName}</td>
-                      <td className="p-4 text-center text-blue-600 underline cursor-pointer font-black">{outage.boardPort}</td>
-                      <td className="p-4 text-center font-black text-slate-900">{outage.onusAffected}</td>
-                      <td className="p-4 text-center font-medium">{outage.los}</td>
-                      <td className="p-4 text-center font-medium">{outage.power}</td>
+                      <td className="p-4 font-bold text-slate-900">{outage.oltName}</td>
+                      <td className="p-4 text-center text-blue-600 underline font-black">{outage.boardPort}</td>
+                      <td className="p-4 text-center font-black">{outage.onusAffected}</td>
+                      <td className="p-4 text-center">{outage.los}</td>
+                      <td className="p-4 text-center">{outage.power}</td>
                       <td className="p-4">
-                        <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded border border-red-100 font-bold uppercase text-[9px] tracking-tighter">
+                        <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded border border-red-100 font-black uppercase text-[9px]">
                           {outage.cause}
                         </span>
                       </td>
@@ -75,7 +79,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
         
         <div className="space-y-6">
           <OltList language={language} />
-          {/* New Event-Driven Activity Log with auto-refresh */}
           <ActivityLog language={language} />
         </div>
       </div>

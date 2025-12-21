@@ -12,17 +12,17 @@ interface DashboardCardProps {
 
 const DashboardCard: React.FC<DashboardCardProps> = ({ title, count, subInfo, icon, bgColor, textColor }) => {
   return (
-    <div className={`${bgColor} ${textColor} rounded shadow-md flex flex-col overflow-hidden`}>
-      <div className="p-4 flex justify-between items-start">
+    <div className={`${bgColor} ${textColor} rounded shadow-sm flex flex-col overflow-hidden h-full border border-black/5`}>
+      <div className="p-5 flex justify-between items-start">
         <div className="flex flex-col">
-          <span className="text-sm font-semibold opacity-90 uppercase tracking-wider">{title}</span>
-          <span className="text-4xl font-bold mt-1">{count.toLocaleString()}</span>
+          <span className="text-[11px] font-black opacity-80 uppercase tracking-widest">{title}</span>
+          <span className="text-5xl font-black mt-1 tracking-tighter">{count.toLocaleString()}</span>
         </div>
-        <div className="p-3 bg-white/20 rounded-lg">
+        <div className="w-12 h-12 bg-black/10 rounded flex items-center justify-center">
           {icon}
         </div>
       </div>
-      <div className="bg-black/5 p-3 text-xs font-medium flex justify-between items-center border-t border-black/5">
+      <div className="bg-black/10 px-5 py-3 text-[11px] font-bold flex justify-between items-center mt-auto">
         {subInfo}
       </div>
     </div>
