@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { 
-  Search, Globe, Settings2, Download, Upload, FileOutput, 
-  Wifi, ChevronRight, ChevronDown, ChevronUp, List, LayoutGrid, Plug, Zap 
+  Search, Globe, FileOutput, 
+  ChevronDown, ChevronUp, List, LayoutGrid, Plug, Zap 
 } from 'lucide-react';
 import { Language, translations } from '../translations';
 import { OnuFilters } from '../services/onuService';
@@ -25,89 +25,69 @@ const OnuFiltersBar: React.FC<OnuFiltersProps> = ({ language, filters, onFilterC
   };
 
   return (
-    <div className="transition-all duration-300 bg-white border border-slate-200 rounded-sm p-3 space-y-3 font-inter shadow-sm">
-      {/* Row 1: Main Search and OLT Infrastructure */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1.5 min-w-[240px] flex-1 max-w-sm">
-          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-tight">Search</label>
-          <div className="relative flex-1">
-            <input 
-              type="text" 
-              name="search"
-              value={filters.search || ''}
-              onChange={handleInputChange}
-              placeholder={t.searchPlaceholder} 
-              className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[11px] outline-none focus:border-blue-500 transition-colors" 
-            />
-          </div>
+    <div className="transition-all duration-300 bg-white border border-slate-200 rounded-xl p-3 sm:p-4 space-y-4 font-inter shadow-sm">
+      {/* Search and Main Selects - Multi-line Flex */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={14} />
+          <input 
+            type="text" 
+            name="search"
+            value={filters.search || ''}
+            onChange={handleInputChange}
+            placeholder={t.searchPlaceholder} 
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-2.5 text-xs outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner" 
+          />
         </div>
 
-        <FilterSelect label="OLT" name="olt_id" value={filters.olt_id} onChange={handleInputChange} options={['Any', 'PGM - Jetz', 'ULI - Jetz', 'DEU - Jetz']} />
-        <FilterSelect label="Board" name="board" value={filters.board} onChange={handleInputChange} options={['Any', '0', '1', '2']} />
-        <FilterSelect label="Port" name="port" value={filters.port} onChange={handleInputChange} options={['Any', '1', '2', '3', '4', '5', '6', '7', '8']} />
-        <FilterSelect label="Zone" name="zone" value={filters.zone} onChange={handleInputChange} options={['Any', 'CEO 001', 'CEO 009', 'CEO 092']} />
-        <FilterSelect label="ODB" name="odb" value={filters.odb} onChange={handleInputChange} options={['Any', 'None', 'ODB-01', 'ODB-02']} />
-        <FilterSelect label="VLAN" name="vlan" value={filters.vlan} onChange={handleInputChange} options={['Any', '11', '100', '200', '1000']} />
-      </div>
-
-      {/* Row 2: Logic, Profiles, and Quick Status Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2">
-          <FilterSelect label="ONU type" name="onu_type" value={filters.onu_type} onChange={handleInputChange} options={['Any', 'EG8010H', 'EG8145X6', 'HG8245Q2']} />
-          <FilterSelect label="Profile" name="profile" value={filters.profile} onChange={handleInputChange} options={['Any', '300M_PLAN', '600M_PLAN', '1G_DEDICATED']} />
-          <FilterSelect label="PON type" name="pon_type" value={filters.pon_type} onChange={handleInputChange} options={['Any', 'GPON', 'EPON', 'XGS-PON']} />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-[11px] font-bold text-slate-500 uppercase">Status</label>
-          <div className="flex items-center gap-1">
-            <StatusIcon color="bg-green-500" active={filters.status === 'online'} onClick={() => onFilterChange({status: 'online'})} icon={<Globe size={12} className="text-white"/>} />
-            <StatusIcon color="bg-slate-500" active={filters.status === 'offline'} onClick={() => onFilterChange({status: 'offline'})} icon={<Plug size={12} className="text-white"/>} />
-            <StatusIcon color="bg-red-500" active={filters.status === 'los'} onClick={() => onFilterChange({status: 'los'})} icon={<Wifi size={12} className="text-white"/>} />
-            <StatusIcon color="bg-blue-500" active={filters.status === 'maintenance'} onClick={() => onFilterChange({status: 'maintenance'})} icon={<Settings2 size={12} className="text-white"/>} />
-            <StatusIcon color="bg-gray-800" active={filters.status === 'dying'} onClick={() => onFilterChange({status: 'dying'})} icon={<Zap size={12} className="text-white"/>} />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-[11px] font-bold text-slate-500 uppercase">Signal</label>
-          <div className="flex items-center gap-1">
-             <SignalBtn color="text-green-500" bars={3} active={filters.signal_level === 'good'} onClick={() => onFilterChange({signal_level: 'good'})} />
-             <SignalBtn color="text-yellow-500" bars={2} active={filters.signal_level === 'warning'} onClick={() => onFilterChange({signal_level: 'warning'})} />
-             <SignalBtn color="text-red-500" bars={1} active={filters.signal_level === 'critical'} onClick={() => onFilterChange({signal_level: 'critical'})} />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <button className="px-2.5 py-1 bg-white border border-slate-300 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50 shadow-sm">B</button>
-          <button className="px-2.5 py-1 bg-white border border-slate-300 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50 shadow-sm">R</button>
-        </div>
-
-        <div className="flex items-center gap-1 ml-auto">
-          <button className="p-1.5 bg-white border border-slate-300 rounded text-slate-500 hover:bg-slate-50"><List size={14}/></button>
-          <button className="p-1.5 bg-blue-600 border border-blue-700 rounded text-white shadow-sm"><LayoutGrid size={14}/></button>
-          <button 
-            onClick={() => setIsExpanded(!isExpanded)}
-            className={`p-1 rounded transition-all border ${isExpanded ? 'bg-slate-100 border-slate-300 text-slate-800' : 'text-blue-600 border-transparent hover:bg-blue-50'}`}
-          >
-            {isExpanded ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
-          </button>
+        <div className="grid grid-cols-2 lg:flex gap-2">
+          <FilterSelect label="OLT" name="olt_id" value={filters.olt_id} onChange={handleInputChange} options={['Any', 'PGM - Jetz', 'ULI - Jetz', 'DEU - Jetz']} />
+          <FilterSelect label="Zone" name="zone" value={filters.zone} onChange={handleInputChange} options={['Any', 'CEO 001', 'CEO 009', 'CEO 092']} />
         </div>
       </div>
 
-      {/* Row 3: Management IPs and Exports (Collapsible) */}
+      {/* Tools and Secondary Filters */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-50">
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
+            <div className="flex items-center gap-1.5">
+              <StatusIcon color="bg-green-500" active={filters.status === 'online'} onClick={() => onFilterChange({status: 'online'})} icon={<Globe size={10} className="text-white"/>} />
+              <StatusIcon color="bg-slate-500" active={filters.status === 'offline'} onClick={() => onFilterChange({status: 'offline'})} icon={<Plug size={10} className="text-white"/>} />
+              <StatusIcon color="bg-red-500" active={filters.status === 'los'} onClick={() => onFilterChange({status: 'los'})} icon={<Zap size={10} className="text-white"/>} />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1 hidden xs:flex">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">View</label>
+            <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+              <button className="p-1.5 text-slate-500 hover:text-slate-800 transition-colors"><List size={14}/></button>
+              <button className="p-1.5 bg-white border border-slate-300 rounded-lg text-blue-600 shadow-sm"><LayoutGrid size={14}/></button>
+            </div>
+          </div>
+        </div>
+
+        <button 
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${isExpanded ? 'bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/10' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+        >
+          {isExpanded ? 'Fewer' : 'Filters'}
+          {isExpanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+        </button>
+      </div>
+
+      {/* Advanced Filters Grid */}
       {isExpanded && (
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 animate-in fade-in slide-in-from-top-1 duration-200">
-          <FilterSelect label="Mgmt IP" name="mgmt_ip" value={filters.mgmt_ip} onChange={handleInputChange} options={['Any', '10.0.0.1', '172.16.0.1']} />
-          <FilterSelect label="TR-069" name="tr069" value={filters.tr069} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
-          <FilterSelect label="VoIP" name="voip" value={filters.voip} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
-          <FilterSelect label="CATV" name="catv" value={filters.catv} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
-          <FilterSelect label="Download" name="download" value={filters.download} onChange={handleInputChange} options={['Any', '100M', '300M', '600M', '1G']} />
-          <FilterSelect label="Upload" name="upload" value={filters.upload} onChange={handleInputChange} options={['Any', '50M', '150M', '300M', '1G']} />
-
-          <button className="ml-auto flex items-center gap-1.5 bg-[#1a73e8] hover:bg-blue-700 text-white text-[11px] font-bold px-3 py-1 rounded shadow-sm transition-all uppercase">
-            <FileOutput size={12} /> {t.export}
-          </button>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200">
+          <FilterSelect label="ONU Type" name="onu_type" value={filters.onu_type} onChange={handleInputChange} options={['Any', 'EG8010H', 'EG8145X6']} />
+          <FilterSelect label="VLAN" name="vlan" value={filters.vlan} onChange={handleInputChange} options={['Any', '11', '100', '200']} />
+          <FilterSelect label="Mode" name="mode" value={filters.mode} onChange={handleInputChange} options={['Any', 'Router', 'Bridge']} />
+          
+          <div className="flex items-end">
+            <button className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-4 py-3 rounded-xl shadow-lg shadow-blue-600/10 transition-all uppercase tracking-widest">
+              <FileOutput size={12} /> {t.export}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -115,13 +95,13 @@ const OnuFiltersBar: React.FC<OnuFiltersProps> = ({ language, filters, onFilterC
 };
 
 const FilterSelect = ({ label, name, value, onChange, options }: any) => (
-  <div className="flex items-center gap-1.5">
-    <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap uppercase tracking-tighter">{label}</label>
+  <div className="flex flex-col gap-1 min-w-[100px] flex-1">
+    <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter ml-1">{label}</label>
     <select 
       name={name}
       value={value || 'Any'}
       onChange={onChange}
-      className="bg-white border border-slate-300 rounded px-1 py-0.5 text-[11px] text-slate-800 outline-none focus:border-blue-500 min-w-[70px] cursor-pointer"
+      className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-black text-slate-700 outline-none focus:bg-white focus:border-blue-500 transition-all cursor-pointer shadow-inner uppercase"
     >
       {options.map((opt: string) => (
         <option key={opt} value={opt === 'Any' ? 'any' : opt}>{opt}</option>
@@ -133,29 +113,11 @@ const FilterSelect = ({ label, name, value, onChange, options }: any) => (
 const StatusIcon = ({ color, active, onClick, icon }: any) => (
   <button 
     onClick={onClick}
-    className={`w-6 h-6 flex items-center justify-center rounded shadow-sm border transition-all ${
-      active ? 'ring-2 ring-blue-400 border-blue-600 z-10' : 'border-slate-200 opacity-90'
+    className={`w-8 h-8 flex items-center justify-center rounded-xl shadow-sm border transition-all ${
+      active ? 'ring-4 ring-blue-500/10 border-blue-600 scale-105 z-10 shadow-md' : 'border-slate-200 opacity-60 hover:opacity-100'
     } ${color}`}
   >
     {icon}
-  </button>
-);
-
-const SignalBtn = ({ color, bars, active, onClick }: any) => (
-  <button 
-    onClick={onClick}
-    className={`px-1 py-1 rounded border flex items-end gap-0.5 transition-all shadow-sm ${
-      active ? 'bg-blue-600 border-blue-700' : 'bg-white border-slate-300 hover:bg-slate-50'
-    }`}
-  >
-    {[1, 2, 3].map(i => (
-      <div 
-        key={i} 
-        className={`w-1 rounded-sm ${i <= bars ? (active ? 'bg-white' : color.replace('text', 'bg')) : 'bg-slate-200'} ${
-          i === 1 ? 'h-1.5' : i === 2 ? 'h-2.5' : i === 3 ? 'h-3.5' : 'h-4.5'
-        }`} 
-      />
-    ))}
   </button>
 );
 
