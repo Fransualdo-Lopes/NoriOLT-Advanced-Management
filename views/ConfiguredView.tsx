@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCcw, PlusCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import ConfiguredOnuTable from '../components/ConfiguredOnuTable';
 import OnuFiltersBar from '../components/OnuFilters';
 import { Language, translations } from '../translations';
@@ -61,25 +61,6 @@ const ConfiguredView: React.FC<ConfiguredViewProps> = ({ onAddOnu, language }) =
 
   return (
     <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
-       {/* Action Buttons Row - Breadcrumb removed to avoid duplication with App.tsx */}
-       <div className="flex items-center justify-end px-1">
-          <div className="flex gap-2">
-             <button 
-               onClick={() => fetchData(true)}
-               disabled={isRefreshing}
-               className="px-4 py-1.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded text-[11px] font-bold flex items-center gap-2 transition-all shadow-sm disabled:opacity-50 uppercase"
-             >
-               <RefreshCcw size={14} className={isRefreshing ? 'animate-spin' : ''} /> ATUALIZAR
-             </button>
-             <button 
-               onClick={onAddOnu} 
-               className="px-4 py-1.5 bg-[#1a73e8] hover:bg-blue-700 text-white rounded text-[11px] font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-600/10 uppercase"
-             >
-               <PlusCircle size={14} /> ADICIONAR ONU
-             </button>
-          </div>
-       </div>
-
        {/* Advanced Filter Bar (Collapsible) */}
        <OnuFiltersBar 
          language={language}
@@ -89,7 +70,7 @@ const ConfiguredView: React.FC<ConfiguredViewProps> = ({ onAddOnu, language }) =
          totalFound={data?.total || 0}
        />
        
-       {/* Consolidated Pagination Row */}
+       {/* Consolidated Pagination Row - Positioned ABOVE table */}
        <div className="flex items-center justify-between px-1 bg-white border border-slate-200 rounded-sm p-3 shadow-sm">
           <div className="text-[11px] font-bold text-slate-500 uppercase tracking-tight">
             SHOWING <span className="text-slate-900">{(filters.page - 1) * filters.limit + 1}-{Math.min(data?.total || 0, filters.page * filters.limit)}</span> OF <span className="text-slate-900">{data?.total || 0}</span> ONUS
