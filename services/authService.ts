@@ -14,10 +14,15 @@ export const authService = {
     if (credentials.username === 'admin' && credentials.password === 'password') {
       const mockResponse: AuthResponse = {
         token: 'mock_jwt_token_nori_olt_2025',
+        // Added missing User properties: name, email, groups, status
         user: {
           id: 'u1',
-          username: 'Admin Nori',
+          name: 'Admin Nori',
+          email: 'admin@noriolt.com',
+          username: 'admin',
           role: 'ADMIN', // Alterado de 'Network Architect' para 'ADMIN' para alinhar com roles.ts
+          groups: ['admins'],
+          status: 'active',
           level: 'Super Admin'
         }
       };

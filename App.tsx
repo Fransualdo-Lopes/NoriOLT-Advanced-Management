@@ -14,6 +14,7 @@ import MaintenanceView from './views/MaintenanceView';
 import LoginView from './views/LoginView';
 import AccessDeniedView from './views/AccessDeniedView';
 import PresetManagerView from './views/PresetManagerView';
+import SettingsView from './views/SettingsView';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated, logout, hasPermission, user } = useAuth();
@@ -59,8 +60,14 @@ const AppContent: React.FC = () => {
       case 'presets':
         return renderProtectedView(
           'presets',
-          Permission.MANAGE_OLT, // Assuming OLT management covers presets
+          Permission.MANAGE_OLT,
           <PresetManagerView language={language} />
+        );
+      case 'settings':
+        return renderProtectedView(
+          'settings',
+          Permission.VIEW_USERS, // Base permission for settings
+          <SettingsView language={language} />
         );
       default:
         return (
@@ -73,7 +80,6 @@ const AppContent: React.FC = () => {
     }
   };
 
-  // Se não estiver autenticado, o Contexto já gerencia o estado e exibe o LoginView
   if (!isAuthenticated) {
     return <LoginView />;
   }
@@ -87,12 +93,7 @@ const AppContent: React.FC = () => {
       onLogout={logout}
     >
       <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-6">
-        <button 
-          className="hover:text-blue-500 transition-colors" 
-          onClick={() => setActiveView('dashboard')}
-        >
-          System
-        </button>
+        <button className="hover:text-blue-500 transition-colors" onClick={() => setActiveView('dashboard')}>System</button>
         <ChevronRight size={10} />
         <span className="text-gray-600">
           {activeView === 'dashboard' ? 'Overview' : t[activeView as keyof typeof t] || activeView}

@@ -46,7 +46,52 @@ export interface ONU {
   upload?: string;
 }
 
-// Added missing SummaryStats interface for dashboard
+// --- User Management & RBAC ---
+export type UserStatus = 'active' | 'disabled';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  role: string; // ADMIN | NOC | SUPPORT
+  groups: string[];
+  restrictionGroupId?: string;
+  status: UserStatus;
+  level?: string;
+  lastLogin?: string;
+}
+
+export interface UserGroup {
+  id: string;
+  name: string;
+  description: string;
+  permissions: string[];
+  userCount: number;
+}
+
+export interface RestrictionGroup {
+  id: string;
+  name: string;
+  allowedOlts: string[];
+  allowedZones: string[];
+  allowedActions: string[];
+  readOnly: boolean;
+  userCount: number;
+}
+
+export interface AuditLog {
+  id: string;
+  userId: string;
+  userName: string;
+  action: string;
+  resource: string;
+  timestamp: string;
+  ip: string;
+  result: 'success' | 'denied';
+}
+
+// --- Monitoring & Stats ---
 export interface SummaryStats {
   waitingAuth: number;
   waitingSub: { d: number, resync: number, new: number };
@@ -58,7 +103,6 @@ export interface SummaryStats {
   lowSignalSub: { warning: number, critical: number }
 }
 
-// Added missing ActivityEvent interface for logs
 export interface ActivityEvent {
   id: string;
   message: string;
@@ -66,7 +110,6 @@ export interface ActivityEvent {
   type: 'error' | 'success' | 'info' | 'warning';
 }
 
-// Added missing PONOutage interface for incidents
 export interface PONOutage {
   id: string;
   oltName: string;
@@ -78,7 +121,6 @@ export interface PONOutage {
   since: string;
 }
 
-// Added missing UnconfiguredONU interface for pending authorizations
 export interface UnconfiguredONU {
   id: string;
   sn: string;
@@ -92,7 +134,6 @@ export interface UnconfiguredONU {
   supports_immediate_auth: boolean;
 }
 
-// Added missing ProvisioningPreset interface for configuration templates
 export interface ProvisioningPreset {
   id: string;
   name: string;
@@ -109,24 +150,14 @@ export interface ProvisioningPreset {
   wifi_ssid_suffix?: string;
 }
 
-// Added missing AuthCredentials interface
 export interface AuthCredentials {
   username: string;
   password?: string;
 }
 
-// Added missing AuthResponse interface
 export interface AuthResponse {
   token: string;
   user: User;
-}
-
-// Added missing User interface for Auth
-export interface User {
-  id: string;
-  username: string;
-  role: string;
-  level: string;
 }
 
 export interface OnuProvisionPayload {
@@ -140,4 +171,5 @@ export interface OnuProvisionPayload {
   profile: string;
 }
 
-export type ViewType = 'dashboard' | 'unconfigured' | 'configured' | 'graphs' | 'diagnostics' | 'provisioning' | 'presets';
+export type ViewType = 'dashboard' | 'unconfigured' | 'configured' | 'graphs' | 'diagnostics' | 'provisioning' | 'presets' | 'settings';
+export type SettingsTab = 'general' | 'users' | 'apikey' | 'billing';

@@ -8,6 +8,7 @@ export const translations = {
     diagnostics: "Diagnostics",
     provisioning: "Provisioning",
     presets: "Presets",
+    settings: "Settings",
     waitingAuth: "Waiting authorization",
     online: "Online",
     totalOffline: "Total offline",
@@ -72,7 +73,30 @@ export const translations = {
     lineProfile: "Line Profile",
     serviceProfile: "Service Profile",
     noPresets: "No presets found",
-    compatibleWith: "Compatible with"
+    compatibleWith: "Compatible with",
+    
+    // User Management
+    general: "General",
+    users: "Users",
+    apiKey: "API key",
+    billing: "Billing",
+    createUser: "Create a new user",
+    createGroup: "Create a new group",
+    viewGroups: "View groups",
+    createRestriction: "Create a new restriction group",
+    viewRestrictions: "View restriction groups",
+    viewLogs: "View logs",
+    operatorId: "Operator ID",
+    accessKey: "Access Key",
+    email: "Email",
+    username: "Username",
+    assignedGroups: "Assigned Groups",
+    restrictionScope: "Restriction Scope",
+    auditLogs: "Audit Logs",
+    targetResource: "Target Resource",
+    timestamp: "Timestamp",
+    ipAddress: "IP Address",
+    result: "Result"
   },
   pt: {
     dashboard: "Painel",
@@ -82,6 +106,7 @@ export const translations = {
     diagnostics: "Diagnósticos",
     provisioning: "Provisionamento",
     presets: "Presets",
+    settings: "Configurações",
     waitingAuth: "Aguardando autorização",
     online: "Online",
     totalOffline: "Total offline",
@@ -146,7 +171,30 @@ export const translations = {
     lineProfile: "Profile de Linha",
     serviceProfile: "Profile de Serviço",
     noPresets: "Nenhum preset encontrado",
-    compatibleWith: "Compatível com"
+    compatibleWith: "Compatível com",
+    
+    // User Management
+    general: "Geral",
+    users: "Usuários",
+    apiKey: "Chave API",
+    billing: "Faturamento",
+    createUser: "Criar novo usuário",
+    createGroup: "Criar novo grupo",
+    viewGroups: "Ver grupos",
+    createRestriction: "Criar grupo de restrição",
+    viewRestrictions: "Ver grupos de restrição",
+    viewLogs: "Ver logs",
+    operatorId: "ID Operador",
+    accessKey: "Chave de Acesso",
+    email: "E-mail",
+    username: "Usuário",
+    assignedGroups: "Grupos Atribuídos",
+    restrictionScope: "Escopo de Restrição",
+    auditLogs: "Logs de Auditoria",
+    targetResource: "Recurso Alvo",
+    timestamp: "Data/Hora",
+    ipAddress: "Endereço IP",
+    result: "Resultado"
   }
 };
 

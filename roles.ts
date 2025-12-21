@@ -19,9 +19,18 @@ export enum Permission {
   VIEW_OLT_STATS = 'olt.view_stats',
   MANAGE_OLT = 'olt.manage',
   
+  // User & Management Permissions
+  VIEW_USERS = 'settings.view_users',
+  MANAGE_USERS = 'settings.manage_users',
+  VIEW_GROUPS = 'settings.view_groups',
+  MANAGE_GROUPS = 'settings.manage_groups',
+  VIEW_RESTRICTIONS = 'settings.view_restrictions',
+  MANAGE_RESTRICTIONS = 'settings.manage_restrictions',
+  VIEW_AUDIT_LOGS = 'settings.view_audit',
+  
   // System Permissions
   VIEW_LOGS = 'system.view_logs',
-  MANAGE_USERS = 'system.manage_users',
+  MANAGE_USERS_SYSTEM = 'system.manage_users', // Legacy mapping
   SYSTEM_SETTINGS = 'system.settings'
 }
 
@@ -35,33 +44,30 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.DELETE_ONU,
     Permission.VIEW_OLT_STATS,
     Permission.MANAGE_OLT,
-    Permission.VIEW_LOGS,
+    Permission.VIEW_USERS,
     Permission.MANAGE_USERS,
+    Permission.VIEW_GROUPS,
+    Permission.MANAGE_GROUPS,
+    Permission.VIEW_RESTRICTIONS,
+    Permission.MANAGE_RESTRICTIONS,
+    Permission.VIEW_AUDIT_LOGS,
+    Permission.VIEW_LOGS,
     Permission.SYSTEM_SETTINGS
   ],
   NOC: [
     Permission.VIEW_CONFIGURED,
     Permission.VIEW_UNCONFIGURED,
     Permission.AUTHORIZE_ONU,
-    Permission.PROVISION_ONU, // NOC can provision
+    Permission.PROVISION_ONU,
     Permission.REBOOT_ONU,
     Permission.VIEW_OLT_STATS,
+    Permission.VIEW_USERS,
+    Permission.VIEW_GROUPS,
+    Permission.VIEW_AUDIT_LOGS,
     Permission.VIEW_LOGS
   ],
   SUPPORT: [
     Permission.VIEW_CONFIGURED,
     Permission.VIEW_OLT_STATS
-    // Support is strictly read-only for diagnostics and current inventory
   ]
 };
-
-/**
- * Example JWT Payload (Decoded)
- * {
- *   "sub": "u123",
- *   "name": "Operator Name",
- *   "role": "NOC",
- *   "iat": 1715600000,
- *   "exp": 1715686400
- * }
- */
