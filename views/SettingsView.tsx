@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Settings, Users, Key, CreditCard } from 'lucide-react';
+import { Settings, Users, Key, CreditCard, ChevronRight } from 'lucide-react';
 import { Language, translations } from '../translations';
 import { SettingsTab } from '../types';
 import UsersTab from './settings/UsersTab';
@@ -15,10 +15,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ language }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
 
   const tabs = [
-    { id: 'general', label: 'General', icon: Settings },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'apikey', label: 'API key', icon: Key },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
+    { id: 'general', label: 'General' },
+    { id: 'users', label: 'Users' },
+    { id: 'apikey', label: 'API key' },
+    { id: 'billing', label: 'Billing' },
   ];
 
   const renderTabContent = () => {
@@ -39,29 +39,29 @@ const SettingsView: React.FC<SettingsViewProps> = ({ language }) => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-      {/* Tab Bar - No Horizontal Scroll, Flex Wrap for Mobile */}
-      <div className="bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as SettingsTab)}
-              className={`flex items-center justify-center gap-2 px-3 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-lg ${
-                activeTab === tab.id 
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-              }`}
-            >
-              <tab.icon size={14} className="shrink-0" />
-              <span className="truncate">{tab.label}</span>
-            </button>
-          ))}
-        </div>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Horizontal Tab Bar - Fixed to match Image 4 */}
+      <div className="flex items-center gap-8 border-b border-slate-200 mb-6 overflow-x-auto scrollbar-hide">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as SettingsTab)}
+            className={`pb-4 px-1 text-sm font-semibold transition-all relative ${
+              activeTab === tab.id 
+                ? 'text-blue-600' 
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            {tab.label}
+            {activeTab === tab.id && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></div>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Content Area */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8 min-h-[500px]">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 min-h-[500px]">
         {renderTabContent()}
       </div>
     </div>
@@ -71,38 +71,46 @@ const SettingsView: React.FC<SettingsViewProps> = ({ language }) => {
 const GeneralSettings: React.FC<{ language: Language }> = ({ language }) => {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <button className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/10 transition-all active:scale-95">
+      {/* Action Buttons (Match Image 3) */}
+      <div className="flex gap-3">
+        <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition-all">
           Edit general settings
         </button>
-        <button className="w-full sm:w-auto px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+        <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition-all">
           See history
         </button>
       </div>
 
-      {/* Settings Table */}
-      <div className="overflow-x-auto rounded-xl border border-slate-100 shadow-inner bg-slate-50/30">
-        <table className="w-full text-left min-w-[500px]">
-          <thead className="bg-slate-100/50 border-b border-slate-200">
-            <tr className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-              <th className="px-6 py-4">Setting Configuration</th>
-              <th className="px-6 py-4">Current Value</th>
+      {/* Settings Table (Match Image 3) */}
+      <div className="overflow-hidden border border-slate-100 rounded-lg shadow-sm">
+        <table className="w-full text-left">
+          <thead className="bg-slate-50 border-b border-slate-100">
+            <tr className="text-xs font-black text-slate-500 uppercase tracking-widest">
+              <th className="px-6 py-4">Setting</th>
+              <th className="px-6 py-4">Value</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-[13px] font-medium text-slate-700">
-            {[
-              { label: 'System Title', value: 'JETZ INTERNET', bold: true },
-              { label: 'Timezone', value: 'America/Belem' },
-              { label: 'Access Control', value: 'Allowed from anywhere' },
-              { label: 'Installer Access (Days)', value: '5', bold: true },
-              { label: 'Default Language', value: 'English' }
-            ].map((row, i) => (
-              <tr key={i} className="hover:bg-white transition-colors">
-                <td className="px-6 py-4 text-slate-500">{row.label}</td>
-                <td className={`px-6 py-4 ${row.bold ? 'font-black text-slate-900 uppercase italic' : 'text-slate-800'}`}>{row.value}</td>
-              </tr>
-            ))}
+          <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+            <tr>
+              <td className="px-6 py-4 text-slate-600">Title</td>
+              <td className="px-6 py-4 font-bold text-slate-900 uppercase">JETZ INTERNET</td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 text-slate-600">Timezone</td>
+              <td className="px-6 py-4">America/Belem</td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 text-slate-600">IPs allowed to access JETZOLT</td>
+              <td className="px-6 py-4">Allowed from anywhere</td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 text-slate-600">Time limit for installers to see ONUs (days)</td>
+              <td className="px-6 py-4 font-bold">5</td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 text-slate-600">Language</td>
+              <td className="px-6 py-4">English</td>
+            </tr>
           </tbody>
         </table>
       </div>

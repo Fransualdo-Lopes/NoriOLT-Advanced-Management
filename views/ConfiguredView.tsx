@@ -41,7 +41,7 @@ const ConfiguredView: React.FC<{ language: Language, onAddOnu: () => void }> = (
   };
 
   return (
-    <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300 pb-10">
+    <div className="space-y-1 animate-in slide-in-from-bottom-2 duration-300">
        <OnuFiltersBar 
          language={language}
          filters={filters}
@@ -50,35 +50,33 @@ const ConfiguredView: React.FC<{ language: Language, onAddOnu: () => void }> = (
          totalFound={data?.total || 0}
        />
        
-       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-1 sm:pb-0 w-full sm:w-auto">
-            {[1, 2, 3, 4, 5].map(p => (
+       <div className="flex items-center justify-between px-3 py-2 bg-white border-x border-slate-200">
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5, 6].map(p => (
               <button 
                 key={p}
                 onClick={() => handlePageChange(p)}
-                className={`min-w-[30px] h-7 px-2 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${
-                  filters.page === p ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200'
+                className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors ${
+                  filters.page === p ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
                 {p}
               </button>
             ))}
-            <button className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 border border-slate-200"><ChevronRight size={14} /></button>
-            <button className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 border border-slate-200"><ChevronsRight size={14} /></button>
+            <button className="w-7 h-7 flex items-center justify-center rounded bg-slate-50 text-slate-400 border border-slate-200"><ChevronRight size={14} /></button>
+            <button className="w-7 h-7 flex items-center justify-center rounded bg-slate-50 text-slate-400 border border-slate-200"><ChevronsRight size={14} /></button>
           </div>
           
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+          <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
             Showing <span className="text-slate-900">{(filters.page - 1) * filters.limit + 1}-{Math.min(data?.total || 0, filters.page * filters.limit)}</span> of <span className="text-slate-900">{data?.total || 0}</span> ONUs
           </div>
        </div>
 
-       <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-          <ConfiguredOnuTable 
-            onus={data?.data || []}
-            loading={loading}
-            language={language}
-          />
-       </div>
+       <ConfiguredOnuTable 
+         onus={data?.data || []}
+         loading={loading}
+         language={language}
+       />
     </div>
   );
 };
