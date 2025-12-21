@@ -41,7 +41,7 @@ const ConfiguredView: React.FC<{ language: Language, onAddOnu: () => void }> = (
   };
 
   return (
-    <div className="space-y-1 animate-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
        <OnuFiltersBar 
          language={language}
          filters={filters}
@@ -50,7 +50,7 @@ const ConfiguredView: React.FC<{ language: Language, onAddOnu: () => void }> = (
          totalFound={data?.total || 0}
        />
        
-       <div className="flex items-center justify-between px-3 py-2 bg-white border-x border-slate-200">
+       <div className="flex items-center justify-between px-3 py-2 bg-white border border-slate-200 rounded-sm">
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5, 6].map(p => (
               <button 
@@ -68,7 +68,8 @@ const ConfiguredView: React.FC<{ language: Language, onAddOnu: () => void }> = (
           </div>
           
           <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
-            Showing <span className="text-slate-900">{(filters.page - 1) * filters.limit + 1}-{Math.min(data?.total || 0, filters.page * filters.limit)}</span> of <span className="text-slate-900">{data?.total || 0}</span> ONUs
+            <span className="hidden sm:inline">Showing </span>
+            <span className="text-slate-900">{(filters.page - 1) * filters.limit + 1}-{Math.min(data?.total || 0, filters.page * filters.limit)}</span> of <span className="text-slate-900">{data?.total || 0}</span> ONUs
           </div>
        </div>
 
