@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCcw, PlusCircle, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { RefreshCcw, PlusCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import ConfiguredOnuTable from '../components/ConfiguredOnuTable';
 import OnuFiltersBar from '../components/OnuFilters';
 import { Language, translations } from '../translations';
 import { onuService, OnuFilters, OnuListResponse } from '../services/onuService';
-import { ONU } from '../types';
 
 interface ConfiguredViewProps {
   onAddOnu: () => void;
@@ -61,33 +60,27 @@ const ConfiguredView: React.FC<ConfiguredViewProps> = ({ onAddOnu, language }) =
   };
 
   return (
-    <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
-       {/* Header Section */}
-       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="flex flex-col">
-            <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">
-              {t.configured} <span className="text-blue-600">Inventory</span>
-            </h2>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Authorized GPON Units Fleet</p>
-          </div>
-          <div className="flex gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
+    <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+       {/* Action Buttons Row - Breadcrumb removed to avoid duplication with App.tsx */}
+       <div className="flex items-center justify-end px-1">
+          <div className="flex gap-2">
              <button 
                onClick={() => fetchData(true)}
                disabled={isRefreshing}
-               className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all shadow-sm disabled:opacity-50 uppercase tracking-widest"
+               className="px-4 py-1.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded text-[11px] font-bold flex items-center gap-2 transition-all shadow-sm disabled:opacity-50 uppercase"
              >
-               <RefreshCcw size={16} className={isRefreshing ? 'animate-spin' : ''} /> {t.refresh}
+               <RefreshCcw size={14} className={isRefreshing ? 'animate-spin' : ''} /> ATUALIZAR
              </button>
              <button 
                onClick={onAddOnu} 
-               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all shadow-lg shadow-blue-600/20 uppercase tracking-widest"
+               className="px-4 py-1.5 bg-[#1a73e8] hover:bg-blue-700 text-white rounded text-[11px] font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-600/10 uppercase"
              >
-               <PlusCircle size={16} /> {t.addOnu}
+               <PlusCircle size={14} /> ADICIONAR ONU
              </button>
           </div>
        </div>
 
-       {/* Advanced Filter Bar */}
+       {/* Advanced Filter Bar (Collapsible) */}
        <OnuFiltersBar 
          language={language}
          filters={filters}
@@ -96,101 +89,55 @@ const ConfiguredView: React.FC<ConfiguredViewProps> = ({ onAddOnu, language }) =
          totalFound={data?.total || 0}
        />
        
-       {/* Pagination Top */}
-       <Pagination 
-         language={language}
-         current={filters.page}
-         total={data?.total || 0}
-         limit={filters.limit}
-         onPageChange={handlePageChange}
-       />
+       {/* Consolidated Pagination Row */}
+       <div className="flex items-center justify-between px-1 bg-white border border-slate-200 rounded-sm p-3 shadow-sm">
+          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-tight">
+            SHOWING <span className="text-slate-900">{(filters.page - 1) * filters.limit + 1}-{Math.min(data?.total || 0, filters.page * filters.limit)}</span> OF <span className="text-slate-900">{data?.total || 0}</span> ONUS
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={() => handlePageChange(1)}
+              disabled={filters.page === 1}
+              className="w-7 h-7 flex items-center justify-center rounded border border-slate-300 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-30"
+            >
+              <ChevronsLeft size={14} />
+            </button>
+            <button 
+              onClick={() => handlePageChange(filters.page - 1)}
+              disabled={filters.page === 1}
+              className="w-7 h-7 flex items-center justify-center rounded border border-slate-300 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-30"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            
+            <button className="w-8 h-8 flex items-center justify-center rounded bg-blue-600 text-white text-[11px] font-bold shadow-sm">
+              {filters.page}
+            </button>
 
-       {/* Main Table */}
+            <button 
+              onClick={() => handlePageChange(filters.page + 1)}
+              disabled={filters.page >= Math.ceil((data?.total || 0) / filters.limit)}
+              className="w-7 h-7 flex items-center justify-center rounded border border-slate-300 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-30"
+            >
+              <ChevronRight size={14} />
+            </button>
+            <button 
+              onClick={() => handlePageChange(Math.ceil((data?.total || 0) / filters.limit))}
+              disabled={filters.page >= Math.ceil((data?.total || 0) / filters.limit)}
+              className="w-7 h-7 flex items-center justify-center rounded border border-slate-300 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-30"
+            >
+              <ChevronsRight size={14} />
+            </button>
+          </div>
+       </div>
+
+       {/* Main Inventory Table */}
        <ConfiguredOnuTable 
          onus={data?.data || []}
          loading={loading}
          language={language}
        />
-
-       {/* Pagination Bottom */}
-       <Pagination 
-         language={language}
-         current={filters.page}
-         total={data?.total || 0}
-         limit={filters.limit}
-         onPageChange={handlePageChange}
-       />
-    </div>
-  );
-};
-
-const Pagination = ({ language, current, total, limit, onPageChange }: any) => {
-  const lastPage = Math.max(1, Math.ceil(total / limit));
-  const startIdx = total === 0 ? 0 : (current - 1) * limit + 1;
-  const endIdx = Math.min(total, current * limit);
-
-  return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-2">
-      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white border border-slate-100 px-4 py-2 rounded-xl">
-        Showing <span className="text-slate-900">{startIdx}-{endIdx}</span> of <span className="text-slate-900">{total}</span> ONUs
-      </div>
-      
-      <div className="flex items-center gap-1">
-        <button 
-          onClick={() => onPageChange(1)}
-          disabled={current === 1}
-          className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 disabled:opacity-30 transition-all shadow-sm"
-        >
-          <ChevronsLeft size={16} />
-        </button>
-        <button 
-          onClick={() => onPageChange(current - 1)}
-          disabled={current === 1}
-          className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 disabled:opacity-30 transition-all shadow-sm"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        
-        <div className="flex gap-1 px-2">
-          {[...Array(Math.min(5, lastPage))].map((_, i) => {
-             // Basic pagination window logic
-             let pageNum = i + 1;
-             if (lastPage > 5 && current > 3) {
-               pageNum = current - 2 + i;
-               if (pageNum > lastPage) pageNum = lastPage - (4 - i);
-             }
-             if (pageNum <= 0) return null;
-             if (pageNum > lastPage) return null;
-
-             return (
-               <button 
-                 key={pageNum}
-                 onClick={() => onPageChange(pageNum)}
-                 className={`w-10 h-10 flex items-center justify-center rounded-xl text-xs font-black transition-all ${
-                   current === pageNum ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm'
-                 }`}
-               >
-                 {pageNum}
-               </button>
-             );
-          })}
-        </div>
-
-        <button 
-          onClick={() => onPageChange(current + 1)}
-          disabled={current === lastPage}
-          className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 disabled:opacity-30 transition-all shadow-sm"
-        >
-          <ChevronRight size={16} />
-        </button>
-        <button 
-          onClick={() => onPageChange(lastPage)}
-          disabled={current === lastPage}
-          className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 disabled:opacity-30 transition-all shadow-sm"
-        >
-          <ChevronsRight size={16} />
-        </button>
-      </div>
     </div>
   );
 };

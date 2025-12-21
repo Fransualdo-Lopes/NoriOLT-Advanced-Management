@@ -1,9 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Search, Globe, Settings2, Download, Upload, FileOutput, 
-  Wifi, ChevronRight, List, LayoutGrid, Plug, Eye, Zap, 
-  ChevronsLeft, ChevronLeft, ChevronsRight
+  Wifi, ChevronRight, ChevronDown, ChevronUp, List, LayoutGrid, Plug, Zap 
 } from 'lucide-react';
 import { Language, translations } from '../translations';
 import { OnuFilters } from '../services/onuService';
@@ -18,18 +17,15 @@ interface OnuFiltersProps {
 
 const OnuFiltersBar: React.FC<OnuFiltersProps> = ({ language, filters, onFilterChange, onClear, totalFound }) => {
   const t = translations[language];
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     onFilterChange({ [name]: value, page: 1 });
   };
 
-  const handlePageChange = (newPage: number) => {
-    onFilterChange({ page: newPage });
-  };
-
   return (
-    <div className="bg-white border border-slate-200 rounded-sm p-3 space-y-3 font-inter shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+    <div className="transition-all duration-300 bg-white border border-slate-200 rounded-sm p-3 space-y-3 font-inter shadow-sm">
       {/* Row 1: Main Search and OLT Infrastructure */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1.5 min-w-[240px] flex-1 max-w-sm">
@@ -90,48 +86,30 @@ const OnuFiltersBar: React.FC<OnuFiltersProps> = ({ language, filters, onFilterC
         <div className="flex items-center gap-1 ml-auto">
           <button className="p-1.5 bg-white border border-slate-300 rounded text-slate-500 hover:bg-slate-50"><List size={14}/></button>
           <button className="p-1.5 bg-blue-600 border border-blue-700 rounded text-white shadow-sm"><LayoutGrid size={14}/></button>
-          <button className="p-1 text-blue-600 hover:bg-blue-50 rounded"><ChevronRight size={18}/></button>
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`p-1 rounded transition-all border ${isExpanded ? 'bg-slate-100 border-slate-300 text-slate-800' : 'text-blue-600 border-transparent hover:bg-blue-50'}`}
+          >
+            {isExpanded ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+          </button>
         </div>
       </div>
 
-      {/* Row 3: Management IPs and Exports */}
-      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
-        <FilterSelect label="Mgmt IP" name="mgmt_ip" value={filters.mgmt_ip} onChange={handleInputChange} options={['Any', '10.0.0.1', '172.16.0.1']} />
-        <FilterSelect label="TR-069" name="tr069" value={filters.tr069} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
-        <FilterSelect label="VoIP" name="voip" value={filters.voip} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
-        <FilterSelect label="CATV" name="catv" value={filters.catv} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
-        <FilterSelect label="Download" name="download" value={filters.download} onChange={handleInputChange} options={['Any', '100M', '300M', '600M', '1G']} />
-        <FilterSelect label="Upload" name="upload" value={filters.upload} onChange={handleInputChange} options={['Any', '50M', '150M', '300M', '1G']} />
+      {/* Row 3: Management IPs and Exports (Collapsible) */}
+      {isExpanded && (
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 animate-in fade-in slide-in-from-top-1 duration-200">
+          <FilterSelect label="Mgmt IP" name="mgmt_ip" value={filters.mgmt_ip} onChange={handleInputChange} options={['Any', '10.0.0.1', '172.16.0.1']} />
+          <FilterSelect label="TR-069" name="tr069" value={filters.tr069} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
+          <FilterSelect label="VoIP" name="voip" value={filters.voip} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
+          <FilterSelect label="CATV" name="catv" value={filters.catv} onChange={handleInputChange} options={['Any', 'Enabled', 'Disabled']} />
+          <FilterSelect label="Download" name="download" value={filters.download} onChange={handleInputChange} options={['Any', '100M', '300M', '600M', '1G']} />
+          <FilterSelect label="Upload" name="upload" value={filters.upload} onChange={handleInputChange} options={['Any', '50M', '150M', '300M', '1G']} />
 
-        <button className="ml-auto flex items-center gap-1.5 bg-[#1a73e8] hover:bg-blue-700 text-white text-[11px] font-bold px-3 py-1 rounded shadow-sm transition-all uppercase">
-          <FileOutput size={12} /> {t.export}
-        </button>
-      </div>
-
-      {/* Pagination Integration (bottom row of the filter area as per image) */}
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5, 6].map(p => (
-            <button 
-              key={p}
-              onClick={() => handlePageChange(p)}
-              className={`w-7 h-7 flex items-center justify-center rounded border text-[11px] font-bold transition-all ${
-                filters.page === p 
-                ? 'bg-slate-200 border-slate-400 text-slate-800' 
-                : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-          <button className="w-7 h-7 flex items-center justify-center rounded bg-white border border-slate-300 text-slate-500 hover:bg-slate-50"><ChevronRight size={14}/></button>
-          <button className="px-2 h-7 flex items-center justify-center rounded bg-white border border-slate-300 text-slate-500 hover:bg-slate-50 text-[10px] font-bold">{'>>'}</button>
+          <button className="ml-auto flex items-center gap-1.5 bg-[#1a73e8] hover:bg-blue-700 text-white text-[11px] font-bold px-3 py-1 rounded shadow-sm transition-all uppercase">
+            <FileOutput size={12} /> {t.export}
+          </button>
         </div>
-        
-        <div className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">
-          1-100 ONUs of <span className="text-slate-900">{totalFound.toLocaleString()}</span> displayed
-        </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -174,7 +152,7 @@ const SignalBtn = ({ color, bars, active, onClick }: any) => (
       <div 
         key={i} 
         className={`w-1 rounded-sm ${i <= bars ? (active ? 'bg-white' : color.replace('text', 'bg')) : 'bg-slate-200'} ${
-          i === 1 ? 'h-1.5' : i === 2 ? 'h-2.5' : 'h-3.5'
+          i === 1 ? 'h-1.5' : i === 2 ? 'h-2.5' : i === 3 ? 'h-3.5' : 'h-4.5'
         }`} 
       />
     ))}
