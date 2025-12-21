@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
 import { ViewType } from './types';
 import { Language, translations } from './translations';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -17,7 +16,7 @@ import PresetManagerView from './views/PresetManagerView';
 import SettingsView from './views/SettingsView';
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, logout, hasPermission, user } = useAuth();
+  const { isAuthenticated, logout, hasPermission } = useAuth();
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [language, setLanguage] = useState<Language>('en');
   const t = translations[language];
@@ -66,7 +65,7 @@ const AppContent: React.FC = () => {
       case 'settings':
         return renderProtectedView(
           'settings',
-          Permission.VIEW_USERS, // Base permission for settings
+          Permission.VIEW_USERS,
           <SettingsView language={language} />
         );
       default:
@@ -92,15 +91,9 @@ const AppContent: React.FC = () => {
       setLanguage={setLanguage}
       onLogout={logout}
     >
-      <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-6">
-        <button className="hover:text-blue-500 transition-colors" onClick={() => setActiveView('dashboard')}>System</button>
-        <ChevronRight size={10} />
-        <span className="text-gray-600">
-          {activeView === 'dashboard' ? 'Overview' : t[activeView as keyof typeof t] || activeView}
-        </span>
+      <div className="pt-2">
+        {renderContent()}
       </div>
-
-      {renderContent()}
     </Layout>
   );
 };
