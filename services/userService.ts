@@ -14,13 +14,13 @@ const MOCK_USERS: User[] = [
 ];
 
 const MOCK_GROUPS: UserGroup[] = [
-  { id: 'admins', name: 'Admins', description: 'Administrator with full system access', permissions: ['*'], userCount: 2 },
-  { id: 'tech_users', name: 'Tech Users', description: 'General network operations staff', permissions: ['onu.view_configured', 'onu.authorize'], userCount: 12 },
-  { id: 'readonly_users', name: 'Readonly Users', description: 'Read-only users with no right to make changes', permissions: ['onu.view'], userCount: 5 },
-  { id: 'call_center', name: 'Call Center', description: 'Read-only user with rights to reboot and resync ONUs', permissions: ['onu.view', 'onu.reboot', 'onu.resync'], userCount: 8 },
-  { id: 'managers', name: 'Managers', description: 'Full rights except user management', permissions: ['onu.*', 'olt.*'], userCount: 3 },
-  { id: 'installers', name: 'Installers', description: 'Can authorize and manage only ONUs authorized by themselves', permissions: ['onu.authorize.own'], userCount: 20 },
-  { id: 'installers_time_limit', name: 'Installers (Time Limit)', description: 'Same as installers but limited to last X days', permissions: ['onu.authorize.own.timed'], userCount: 15 }
+  { id: 'admins', name: 'Admins', description: 'Administrator with full system access', groupType: 'admin', permissions: ['*'], userCount: 2 },
+  { id: 'tech_users', name: 'Tech Users', description: 'General network operations staff', groupType: 'tech_users', permissions: ['onu.view_configured', 'onu.authorize'], userCount: 12 },
+  { id: 'readonly_users', name: 'Readonly Users', description: 'Read-only users with no right to make changes', groupType: 'read_only', permissions: ['onu.view'], userCount: 5 },
+  { id: 'call_center', name: 'Call Center', description: 'Read-only user with rights to reboot and resync ONUs', groupType: 'support', permissions: ['onu.view', 'onu.reboot', 'onu.resync'], userCount: 8 },
+  { id: 'managers', name: 'Managers', description: 'Full rights except user management', groupType: 'admin', permissions: ['onu.*', 'olt.*'], userCount: 3 },
+  { id: 'installers', name: 'Installers', description: 'Can authorize and manage only ONUs authorized by themselves', groupType: 'tech_users', permissions: ['onu.authorize.own'], userCount: 20 },
+  { id: 'installers_time_limit', name: 'Installers (Time Limit)', description: 'Same as installers but limited to last X days', groupType: 'tech_users', permissions: ['onu.authorize.own.timed'], userCount: 15 }
 ];
 
 const MOCK_RESTRICTIONS: RestrictionGroup[] = [
@@ -78,5 +78,16 @@ export const userService = {
   async deleteUser(id: string): Promise<void> {
     console.log('API DELETE /users/' + id);
     await new Promise(r => setTimeout(r, 800));
+  },
+
+  async createGroup(payload: Omit<UserGroup, 'id' | 'userCount'>): Promise<UserGroup> {
+    console.log('🚀 Audit Log: Group Creation Triggered', payload);
+    await new Promise(r => setTimeout(r, 1000));
+    const newGroup: UserGroup = {
+      id: `g_${Math.random().toString(36).substr(2, 9)}`,
+      userCount: 0,
+      ...payload
+    };
+    return newGroup;
   }
 };

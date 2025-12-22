@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   UserPlus, Users, Shield, History, RefreshCw, 
   Trash2, Edit3, ShieldAlert, CheckCircle2, Globe, Cpu, MoreVertical,
-  ChevronDown, LayoutGrid, ListFilter, ArrowLeft
+  ChevronDown, LayoutGrid, ListFilter, ArrowLeft, ShieldPlus
 } from 'lucide-react';
 import { Language, translations } from '../../translations';
 import { User, UserGroup, RestrictionGroup, AuditLog } from '../../types';
@@ -12,12 +12,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Permission } from '../../roles';
 import PermissionGate from '../../components/PermissionGate';
 import CreateUserForm from './CreateUserForm';
+import CreateGroupForm from './CreateGroupForm';
 
 interface UsersTabProps {
   language: Language;
 }
 
-type SubView = 'users' | 'groups' | 'restrictions' | 'logs' | 'create';
+type SubView = 'users' | 'groups' | 'restrictions' | 'logs' | 'create' | 'create_group';
 
 const UsersTab: React.FC<UsersTabProps> = ({ language }) => {
   const t = translations[language];
@@ -74,6 +75,19 @@ const UsersTab: React.FC<UsersTabProps> = ({ language }) => {
     );
   }
 
+  if (activeSubView === 'create_group') {
+    return (
+      <CreateGroupForm 
+        language={language} 
+        onCancel={() => setActiveSubView('groups')}
+        onSuccess={() => {
+          setActiveSubView('groups');
+          fetchData();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden min-h-[600px] flex flex-col">
       {/* Users Toolbar - Smart Mobile Navigation */}
@@ -108,13 +122,15 @@ const UsersTab: React.FC<UsersTabProps> = ({ language }) => {
         {/* Action Group */}
         <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
            <PermissionGate permission={Permission.MANAGE_USERS}>
-              <button 
-                onClick={() => setActiveSubView('create')}
-                className="flex-1 md:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-600/10 transition-transform active:scale-95"
-              >
-                <UserPlus size={16} /> 
-                <span className="whitespace-nowrap">{t.createUser}</span>
-              </button>
+              <div className="flex gap-2 w-full md:w-auto">
+                <button 
+                  onClick={() => setActiveSubView(activeSubView === 'groups' ? 'create_group' : 'create')}
+                  className="flex-1 md:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-transform active:scale-95"
+                >
+                  {activeSubView === 'groups' ? <ShieldPlus size={16} /> : <UserPlus size={16} />}
+                  <span className="whitespace-nowrap">{activeSubView === 'groups' ? t.createGroup : t.createUser}</span>
+                </button>
+              </div>
            </PermissionGate>
            
            <div className="flex items-center gap-2">
@@ -139,7 +155,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ language }) => {
         ) : (
           <div className="animate-in fade-in duration-300">
              {activeSubView === 'users' && <UsersList users={data.users} isAdmin={isAdmin} language={language} />}
-             {activeSubView === 'groups' && <GroupsList groups={data.groups} isAdmin={isAdmin} language={language} />}
+             {activeSubView === 'groups' && <GroupsList groups={data.groups} isAdmin={isAdmin} language={language} onEditGroup={(g: UserGroup) => { console.log('Edit group', g); }} />}
              {activeSubView === 'restrictions' && <RestrictionsList restrictions={data.restrictions} isAdmin={isAdmin} language={language} />}
              {activeSubView === 'logs' && <AuditLogsList logs={data.logs} language={language} />}
           </div>
@@ -220,27 +236,51 @@ const UsersList = ({ users, isAdmin, language }: any) => {
   );
 };
 
-const GroupsList = ({ groups, isAdmin, language }: any) => {
+const GroupsList = ({ groups, isAdmin, language, onEditGroup }: any) => {
   const t = translations[language as Language];
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {groups.map((group: UserGroup) => (
-        <div key={group.id} className="p-5 border border-slate-200 rounded-2xl hover:border-blue-300 transition-all group bg-white shadow-sm">
-          <div className="flex justify-between items-start mb-3">
-             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white"><Shield size={20}/></div>
+        <div key={group.id} className="p-6 border border-slate-200 rounded-3xl hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-900/5 transition-all group bg-white shadow-sm flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50/50 -mr-8 -mt-8 rounded-full blur-2xl group-hover:bg-indigo-50/50 transition-colors"></div>
+          
+          <div className="flex justify-between items-start mb-4 relative z-10">
+             <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg ${
+                  group.groupType === 'admin' ? 'bg-slate-900 shadow-slate-900/10' : 
+                  group.groupType === 'tech_users' ? 'bg-indigo-600 shadow-indigo-600/10' : 
+                  group.groupType === 'support' ? 'bg-blue-500 shadow-blue-500/10' : 'bg-slate-500 shadow-slate-500/10'
+                }`}>
+                   <Shield size={22}/>
+                </div>
                 <div>
-                  <h4 className="font-black text-slate-900 uppercase italic tracking-tighter">{group.name}</h4>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{group.userCount} users assigned</span>
+                  <h4 className="text-sm font-black text-slate-900 uppercase italic tracking-tighter">{group.name}</h4>
+                  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{group.userCount} Users Assigned</span>
                 </div>
              </div>
-             {isAdmin && <button className="p-2 text-slate-300 hover:text-slate-600"><MoreVertical size={16}/></button>}
+             {isAdmin && (
+               <button 
+                 onClick={() => onEditGroup(group)}
+                 className="p-2 text-slate-300 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+               >
+                 <MoreVertical size={18}/>
+               </button>
+             )}
           </div>
-          <p className="text-xs text-slate-500 font-medium mb-4">{group.description}</p>
-          <div className="flex flex-wrap gap-1">
+          
+          <p className="text-xs text-slate-500 font-medium mb-5 leading-relaxed relative z-10">{group.description}</p>
+          
+          <div className="mt-auto flex flex-wrap gap-1.5 relative z-10">
              {group.permissions.map(p => (
-               <span key={p} className="text-[8px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{p}</span>
+               <span key={p} className="text-[8px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-100">
+                 {p.replace('.', ' • ')}
+               </span>
              ))}
+             {group.permissions.includes('*') && (
+               <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-100">
+                 Full Access Cluster
+               </span>
+             )}
           </div>
         </div>
       ))}

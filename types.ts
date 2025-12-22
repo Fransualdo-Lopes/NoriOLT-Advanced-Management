@@ -51,6 +51,7 @@ export interface ONU {
 
 // --- User Management & RBAC ---
 export type UserStatus = 'active' | 'disabled';
+export type GroupType = 'admin' | 'tech_users' | 'read_only' | 'support';
 
 export interface UserPermissions {
   viewDashboardStats: boolean;
@@ -91,8 +92,10 @@ export interface UserGroup {
   id: string;
   name: string;
   description: string;
+  groupType: GroupType;
   permissions: string[];
   userCount: number;
+  createdAt?: string;
 }
 
 export interface RestrictionGroup {

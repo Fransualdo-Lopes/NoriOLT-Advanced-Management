@@ -104,7 +104,6 @@ export const translations = {
     auditLogs: "Audit Logs",
     targetResource: "Target Resource",
     timestamp: "Timestamp",
-    // Removed duplicate ipAddress property on line 107
     result: "Result",
     firstName: "First Name",
     lastName: "Last Name",
@@ -116,7 +115,12 @@ export const translations = {
     allowedIps: "Allowed IPs (CIDR)",
     noRestrictions: "No group / no restriction",
     saveUser: "Save User",
-    discardChanges: "Discard Changes"
+    discardChanges: "Discard Changes",
+    groupName: "Group Name",
+    description: "Description",
+    groupType: "Group Type",
+    saveGroup: "Save Group",
+    selectAll: "Select all"
   },
   pt: {
     dashboard: "Painel",
@@ -222,7 +226,6 @@ export const translations = {
     auditLogs: "Logs de Auditoria",
     targetResource: "Recurso Alvo",
     timestamp: "Data/Hora",
-    // Removed duplicate ipAddress property on line 225
     result: "Resultado",
     firstName: "Nome",
     lastName: "Sobrenome",
@@ -234,7 +237,12 @@ export const translations = {
     allowedIps: "IPs Permitidos (CIDR)",
     noRestrictions: "Sem grupo / sem restrição",
     saveUser: "Salvar Usuário",
-    discardChanges: "Descartar Alterações"
+    discardChanges: "Descartar Alterações",
+    groupName: "Nome do Grupo",
+    description: "Descrição",
+    groupType: "Tipo do Grupo",
+    saveGroup: "Salvar Grupo",
+    selectAll: "Selecionar todos"
   }
 };
 
