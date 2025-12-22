@@ -7,17 +7,19 @@ import OltList from '../components/OltList';
 import ActivityLog from '../components/ActivityLog';
 import { mockOutages } from '../data/mockData';
 import { Language, translations } from '../translations';
+import { ViewType } from '../types';
 
 interface DashboardViewProps {
   language: Language;
+  onNavigate: (view: ViewType) => void;
 }
 
-const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ language, onNavigate }) => {
   const t = translations[language];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <DashboardStats language={language} />
+      <DashboardStats language={language} onNavigate={onNavigate} />
 
       <div className="flex justify-between items-center text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black px-1">
         <div className="flex items-center gap-2">

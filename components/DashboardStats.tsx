@@ -4,12 +4,14 @@ import { Wand2, Database, WifiOff, SignalLow, RefreshCw, AlertCircle } from 'luc
 import DashboardCard from './DashboardCard';
 import { statsService, DashboardStatsResponse, OnuStatsResponse } from '../services/statsService';
 import { Language, translations } from '../translations';
+import { ViewType } from '../types';
 
 interface DashboardStatsProps {
   language: Language;
+  onNavigate: (view: ViewType) => void;
 }
 
-const DashboardStats: React.FC<DashboardStatsProps> = ({ language }) => {
+const DashboardStats: React.FC<DashboardStatsProps> = ({ language, onNavigate }) => {
   const t = translations[language];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +21,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ language }) => {
   const fetchTelemetry = async () => {
     try {
       setError(null);
-      // Fetch concurrent data streams from SmartOLT endpoints
       const [dash, onus] = await Promise.all([
         statsService.getDashboardStats(),
         statsService.getOnuStats()
@@ -35,8 +36,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ language }) => {
 
   useEffect(() => {
     fetchTelemetry();
-    
-    // Auto-refresh every 60 seconds as per requirements
     const interval = setInterval(fetchTelemetry, 60000);
     return () => clearInterval(interval);
   }, []);
@@ -68,7 +67,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ language }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
-      {/* Background refresh indicator */}
       {loading && (
         <div className="absolute -top-6 right-0 flex items-center gap-2 text-[10px] text-blue-500 font-bold uppercase animate-pulse">
           <RefreshCw size={10} className="animate-spin" /> Atualizando...
@@ -81,6 +79,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ language }) => {
         bgColor="bg-[#00a6fb]"
         textColor="text-white"
         icon={<Wand2 size={24} />}
+        onClick={() => onNavigate('unconfigured')}
         subInfo={
           <>
             <span>Provisioning Engine: <span className="font-bold">READY</span></span>
@@ -93,6 +92,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ language }) => {
         bgColor="bg-[#22c55e]"
         textColor="text-white"
         icon={<Database size={24} />}
+        onClick={() => onNavigate('configured')}
         subInfo={<span>{t.totalAuthorized}: {dashData?.total_onus.toLocaleString()}</span>}
       />
       <DashboardCard 
@@ -101,6 +101,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ language }) => {
         bgColor="bg-[#334155]"
         textColor="text-white"
         icon={<WifiOff size={24} />}
+        onClick={() => onNavigate('configured')}
         subInfo={
           <span>
             {t.pwrFail}: {onuData?.power_fail} {t.los}: {onuData?.los} N/A: {onuData?.na}
@@ -113,6 +114,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ language }) => {
         bgColor="bg-[#f59e0b]"
         textColor="text-white"
         icon={<SignalLow size={24} />}
+        onClick={() => onNavigate('configured')}
         subInfo={
           <span>
             {t.warning}: {onuData?.low_signal_warning} 

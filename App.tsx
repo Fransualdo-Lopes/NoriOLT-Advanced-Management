@@ -31,7 +31,7 @@ const AppContent: React.FC = () => {
   const renderContent = () => {
     switch (activeView) {
       case 'dashboard':
-        return <DashboardView language={language} />;
+        return <DashboardView language={language} onNavigate={setActiveView} />;
       case 'configured':
         return renderProtectedView(
           'configured', 
