@@ -179,6 +179,24 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
                 {item.label}
               </button>
             ))}
+
+            {/* Mobile Settings Section (New) */}
+            <div className="pt-6 mt-4 border-t border-white/5">
+              <div className="px-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <Settings size={14} /> {t.settings}
+              </div>
+              <div className="grid grid-cols-1 gap-1">
+                {settingsOptions.map((opt, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => handleNavClick(opt.view as ViewType)}
+                    className="w-full text-left px-8 py-2 text-xs font-bold text-slate-400 hover:text-blue-400 transition-colors"
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </nav>
 
           <button 
