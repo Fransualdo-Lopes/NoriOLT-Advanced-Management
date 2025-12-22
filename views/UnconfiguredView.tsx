@@ -64,29 +64,24 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
 
   /**
    * WebSocket Integration
-   * Subscribing to real-time OLT hardware events
    */
   useEffect(() => {
     const unsubStatus = socketService.onStatusChange(setSocketStatus);
     
-    // Real-time detection: Add to list instantly
     const unsubDetected = socketService.on<UnconfiguredONU>('onu.detected', (newOnu) => {
       setOnus(prev => {
         const exists = prev.find(o => o.sn === newOnu.sn);
         if (exists) return prev;
         return [newOnu, ...prev];
       });
-      // Show subtle hint of detection
       setNotification({ type: 'success', message: `New hardware ${newOnu.sn} detected on ${newOnu.olt_name}` });
       setTimeout(() => setNotification(null), 3000);
     });
 
-    // Real-time authorization: Remove from list (synced across all operators)
     const unsubAuthorized = socketService.on<{id: string, sn: string}>('onu.authorized', (payload) => {
       setOnus(prev => prev.filter(o => o.id !== payload.id && o.sn !== payload.sn));
     });
 
-    // Manual removal/unplugging: Remove from list
     const unsubRemoved = socketService.on<{id: string}>('onu.removed', (payload) => {
       setOnus(prev => prev.filter(o => o.id !== payload.id));
     });
@@ -99,8 +94,6 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
     };
   }, []);
 
-  // Fallback Polling: Still necessary if socket fails or during high-latency periods
-  // Only active if socket is NOT connected/simulated
   usePolling(
     () => fetchData(false), 
     30000, 
@@ -150,13 +143,15 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
         </div>
       )}
 
-      {/* Top Controls - SmartOLT Style */}
-      <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">OLT</label>
+      {/* Top Controls - Optimized for Mobile */}
+      <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        
+        {/* Row 1: OLT Filter & Refresh */}
+        <div className="flex items-center gap-2 sm:gap-4 w-full xl:w-auto">
+          <div className="flex-1 sm:flex-none flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OLT</label>
             <select 
-              className="bg-transparent text-sm font-bold text-slate-700 outline-none cursor-pointer"
+              className="bg-transparent text-xs sm:text-sm font-bold text-slate-700 outline-none cursor-pointer flex-1"
               value={filterOltId}
               onChange={(e) => setFilterOltId(e.target.value)}
             >
@@ -170,35 +165,37 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
           <button 
             onClick={() => fetchData(true)}
             disabled={isRefreshing}
-            className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-green-600/10 uppercase tracking-widest disabled:opacity-70"
+            className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-600/10 uppercase tracking-widest disabled:opacity-70 active:scale-95"
           >
             {isRefreshing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCcw size={16} />}
-            {t.refresh}
+            <span className="whitespace-nowrap">{t.refresh}</span>
           </button>
         </div>
 
-        {/* Status Indicators & Auto Actions */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Socket Status */}
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[9px] font-black uppercase tracking-[0.15em] transition-all ${
+        {/* Row 2: Status Tray - Scrollable on Mobile */}
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 sm:pb-0">
+          
+          {/* Socket Status Pill */}
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[9px] font-black uppercase tracking-[0.1em] transition-all whitespace-nowrap shrink-0 ${
             socketStatus === 'connected' ? 'bg-green-50 border-green-100 text-green-600' : 
             socketStatus === 'simulated' ? 'bg-blue-50 border-blue-100 text-blue-600' : 
             socketStatus === 'connecting' ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-red-50 border-red-100 text-red-600'
           }`}>
             {(socketStatus === 'connected' || socketStatus === 'simulated') ? <Zap size={14} fill="currentColor" /> : <ZapOff size={14} />}
-            Live OLT Link: <span className="opacity-70">{socketStatus}</span>
+            Live OLT Link: <span className="opacity-70 ml-1">{socketStatus}</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
-            <div className="px-3 flex items-center gap-2 border-r border-slate-200 mr-2">
-               <Activity size={14} className="text-blue-500" />
-               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t.autoActions}</span>
+          {/* Auto Actions & History Tray */}
+          <div className="flex items-center gap-2 bg-slate-50/80 p-1.5 rounded-xl border border-slate-100 shrink-0">
+            <div className="px-2 flex items-center gap-1.5 border-r border-slate-200">
+               <Activity size={12} className="text-blue-500" />
+               <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Tools</span>
             </div>
-            <button className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+            <button className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all">
               {t.configureActions}
             </button>
-            <button className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2">
-              <History size={12} /> {t.taskHistory}
+            <button className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all flex items-center gap-1.5">
+              <History size={11} /> {t.taskHistory}
             </button>
           </div>
         </div>
@@ -232,54 +229,56 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
               </div>
 
               <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-slate-50/80 border-b border-slate-100">
-                    <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
-                      <th className="px-6 py-5">PON Type</th>
-                      <th className="px-6 py-5">Board</th>
-                      <th className="px-6 py-5">Port</th>
-                      <th className="px-6 py-5">PON Description</th>
-                      <th className="px-6 py-5">SN</th>
-                      <th className="px-6 py-5">Type</th>
-                      <th className="px-6 py-5 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {group.onus.map(onu => (
-                      <tr key={onu.id} className="hover:bg-slate-50/50 transition-colors group animate-in slide-in-from-left-2 duration-300">
-                        <td className="px-6 py-5">
-                          <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded-lg border border-blue-100">
-                            {onu.pon_type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 text-sm font-bold text-slate-700">{onu.board}</td>
-                        <td className="px-6 py-5 text-sm font-bold text-slate-700">{onu.port}</td>
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-2">
-                            <Server size={12} className="text-slate-300" />
-                            <span className="text-xs font-bold text-slate-500 italic uppercase">{onu.pon_description}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <span className="text-[11px] font-mono font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/50">
-                            {onu.sn}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{onu.model}</td>
-                        <td className="px-6 py-5">
-                          <div className="flex items-center justify-center gap-2">
-                            <button 
-                              onClick={() => handleAuthorizeClick(onu)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/10 uppercase tracking-widest"
-                            >
-                              {t.authorize}
-                            </button>
-                          </div>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead className="bg-slate-50/80 border-b border-slate-100">
+                      <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                        <th className="px-6 py-5">PON Type</th>
+                        <th className="px-6 py-5">Board</th>
+                        <th className="px-6 py-5">Port</th>
+                        <th className="px-6 py-5">PON Description</th>
+                        <th className="px-6 py-5">SN</th>
+                        <th className="px-6 py-5">Type</th>
+                        <th className="px-6 py-5 text-center">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {group.onus.map(onu => (
+                        <tr key={onu.id} className="hover:bg-slate-50/50 transition-colors group animate-in slide-in-from-left-2 duration-300">
+                          <td className="px-6 py-5">
+                            <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded-lg border border-blue-100">
+                              {onu.pon_type}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-sm font-bold text-slate-700">{onu.board}</td>
+                          <td className="px-6 py-5 text-sm font-bold text-slate-700">{onu.port}</td>
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-2">
+                              <Server size={12} className="text-slate-300" />
+                              <span className="text-xs font-bold text-slate-500 italic uppercase">{onu.pon_description}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className="text-[11px] font-mono font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/50">
+                              {onu.sn}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{onu.model}</td>
+                          <td className="px-6 py-5">
+                            <div className="flex items-center justify-center gap-2">
+                              <button 
+                                onClick={() => handleAuthorizeClick(onu)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/10 uppercase tracking-widest"
+                              >
+                                {t.authorize}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           ))}
