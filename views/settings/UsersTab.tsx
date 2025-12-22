@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   UserPlus, Users, Shield, History, RefreshCw, 
   Trash2, Edit3, ShieldAlert, CheckCircle2, Globe, Cpu, MoreVertical,
-  ChevronDown, LayoutGrid, ListFilter
+  ChevronDown, LayoutGrid, ListFilter, ArrowLeft
 } from 'lucide-react';
 import { Language, translations } from '../../translations';
 import { User, UserGroup, RestrictionGroup, AuditLog } from '../../types';
@@ -11,12 +11,13 @@ import { userService } from '../../services/userService';
 import { useAuth } from '../../contexts/AuthContext';
 import { Permission } from '../../roles';
 import PermissionGate from '../../components/PermissionGate';
+import CreateUserForm from './CreateUserForm';
 
 interface UsersTabProps {
   language: Language;
 }
 
-type SubView = 'users' | 'groups' | 'restrictions' | 'logs';
+type SubView = 'users' | 'groups' | 'restrictions' | 'logs' | 'create';
 
 const UsersTab: React.FC<UsersTabProps> = ({ language }) => {
   const t = translations[language];
@@ -57,8 +58,21 @@ const UsersTab: React.FC<UsersTabProps> = ({ language }) => {
 
   const handleSubViewChange = (view: SubView) => {
     setActiveSubView(view);
-    setIsNavExpanded(false); // Fecha ao selecionar no mobile
+    setIsNavExpanded(false);
   };
+
+  if (activeSubView === 'create') {
+    return (
+      <CreateUserForm 
+        language={language} 
+        onCancel={() => setActiveSubView('users')}
+        onSuccess={() => {
+          setActiveSubView('users');
+          fetchData();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden min-h-[600px] flex flex-col">
@@ -66,13 +80,11 @@ const UsersTab: React.FC<UsersTabProps> = ({ language }) => {
       <div className="bg-slate-50 p-3 sm:p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
         
         <div className="flex flex-col gap-2 flex-1">
-          {/* Label indicating section on mobile when expanded */}
           {isNavExpanded && (
             <span className="md:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select View Mode</span>
           )}
           
           <div className="flex items-start gap-2">
-            {/* Nav Container: Switches between scroll and wrap grid */}
             <div className={`flex items-center bg-white p-1 rounded-xl border border-slate-200 flex-1 transition-all duration-300 ${
               isNavExpanded ? 'flex-wrap gap-2' : 'overflow-x-auto scrollbar-hide'
             }`}>
@@ -82,11 +94,10 @@ const UsersTab: React.FC<UsersTabProps> = ({ language }) => {
                <ToolbarBtn active={activeSubView === 'logs'} onClick={() => handleSubViewChange('logs')} icon={<History size={14}/>} label={t.viewLogs} fullWidth={isNavExpanded} />
             </div>
 
-            {/* Expansion Toggle Button (Mobile Only) */}
             <button 
               onClick={() => setIsNavExpanded(!isNavExpanded)}
               className={`md:hidden p-2.5 rounded-xl border transition-all active:scale-95 flex items-center justify-center shrink-0 ${
-                isNavExpanded ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-400'
+                isNavExpanded ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-400'
               }`}
             >
               {isNavExpanded ? <LayoutGrid size={18} /> : <ListFilter size={18} />}
@@ -97,7 +108,10 @@ const UsersTab: React.FC<UsersTabProps> = ({ language }) => {
         {/* Action Group */}
         <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
            <PermissionGate permission={Permission.MANAGE_USERS}>
-              <button className="flex-1 md:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-600/10 transition-transform active:scale-95">
+              <button 
+                onClick={() => setActiveSubView('create')}
+                className="flex-1 md:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-600/10 transition-transform active:scale-95"
+              >
                 <UserPlus size={16} /> 
                 <span className="whitespace-nowrap">{t.createUser}</span>
               </button>
@@ -139,7 +153,7 @@ const ToolbarBtn = ({ active, onClick, icon, label, fullWidth }: any) => (
   <button 
     onClick={onClick}
     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-      fullWidth ? 'w-full justify-start border border-slate-100' : 'shrink-0'
+      fullWidth ? 'w-full justify-start border border-slate-100 mb-1' : 'shrink-0'
     } ${
       active ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'
     }`}

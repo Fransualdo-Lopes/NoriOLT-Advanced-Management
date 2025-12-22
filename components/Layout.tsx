@@ -2,9 +2,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Globe, LayoutGrid, Wand2, CheckCircle, BarChart2, Activity, 
-  Bell, LogOut, Menu, X, Settings, ChevronDown, User as UserIcon
+  Bell, LogOut, Menu, X, Settings, ChevronDown, User as UserIcon, Shield
 } from 'lucide-react';
-import { ViewType } from '../types';
+import { ViewType, SettingsTab } from '../types';
 import { Language, translations } from '../translations';
 import { useAuth } from '../contexts/AuthContext';
 import { Permission } from '../roles';
@@ -13,16 +13,18 @@ interface LayoutProps {
   children: React.ReactNode;
   activeView: ViewType;
   setActiveView: (view: ViewType) => void;
+  navigateToSettings?: (tab: SettingsTab) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
   onLogout: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, language, setLanguage, onLogout }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, navigateToSettings, language, setLanguage, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isUserHovered, setIsUserHovered] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
-  const { hasPermission } = useAuth();
+  const { user, hasPermission } = useAuth();
   const t = translations[language];
 
   useEffect(() => {
@@ -58,6 +60,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
   const handleNavClick = (view: ViewType) => {
     setActiveView(view);
     setIsMobileMenuOpen(false);
+  };
+
+  const handleUserIconClick = () => {
+    if (user?.role === 'ADMIN' && navigateToSettings) {
+      navigateToSettings('users');
+    }
   };
 
   return (
@@ -135,8 +143,55 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, la
               <Bell size={18} />
             </button>
 
-            <div className="w-8 h-8 bg-slate-800 rounded flex items-center justify-center border border-slate-700 text-slate-400">
-              <UserIcon size={16} />
+            {/* User Icon with Hover Tooltip and Click Navigation */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setIsUserHovered(true)}
+              onMouseLeave={() => setIsUserHovered(false)}
+            >
+              <button 
+                onClick={handleUserIconClick}
+                className={`w-8 h-8 rounded flex items-center justify-center border transition-all ${
+                  user?.role === 'ADMIN' ? 'cursor-pointer hover:border-blue-400 hover:text-blue-400 active:scale-95' : 'cursor-default'
+                } bg-slate-800 border-slate-700 text-slate-400`}
+              >
+                <UserIcon size={16} />
+              </button>
+
+              {/* Hover Tooltip */}
+              {isUserHovered && user && (
+                <div className="absolute top-full right-0 mt-3 w-64 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400">
+                      <UserIcon size={20} />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-black text-white truncate uppercase italic tracking-tighter">{user.name}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Shield size={10} className="text-blue-400" />
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{user.role}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-800">
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                      {user.email}
+                    </p>
+                    {user.level && (
+                      <span className="inline-block mt-2 px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-[8px] font-black text-slate-400 uppercase">
+                        {user.level}
+                      </span>
+                    )}
+                  </div>
+                  {user.role === 'ADMIN' && (
+                    <div className="mt-3 pt-3 border-t border-slate-800">
+                      <p className="text-[8px] font-black text-blue-500 uppercase tracking-widest animate-pulse">
+                        Click icon to manage users
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             
             <button 

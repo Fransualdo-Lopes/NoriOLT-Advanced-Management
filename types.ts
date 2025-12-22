@@ -21,6 +21,7 @@ export type OnuMode = 'Bridge' | 'Router';
 export interface ONU {
   id: string;
   sn: string;
+  mac?: string;
   name: string;
   olt_id?: string;
   olt_name?: string;
@@ -39,7 +40,9 @@ export interface ONU {
   voip?: boolean;
   tv?: boolean;
   type?: string;
+  profile?: string;
   authDate?: string;
+  lastSeen?: string;
   mgmt_ip?: string;
   tr069?: string;
   download?: string;
@@ -49,10 +52,23 @@ export interface ONU {
 // --- User Management & RBAC ---
 export type UserStatus = 'active' | 'disabled';
 
+export interface UserPermissions {
+  viewDashboardStats: boolean;
+  viewPaymentOptions: boolean;
+  viewOnuCount: boolean;
+  deleteOnus: boolean;
+  batchOnuActions: boolean;
+  receiveExpiringAlerts: boolean;
+  receiveLoginIpAlerts: boolean;
+}
+
 export interface User {
   id: string;
+  firstName?: string;
+  lastName?: string;
   name: string;
   email: string;
+  phone?: string;
   username: string;
   role: string; // ADMIN | NOC | SUPPORT
   groups: string[];
@@ -60,6 +76,15 @@ export interface User {
   status: UserStatus;
   level?: string;
   lastLogin?: string;
+  allowedIps?: string[];
+  language?: string;
+  forcePasswordChange?: boolean;
+  permissions?: UserPermissions;
+}
+
+export interface UserCreationPayload extends Omit<User, 'id' | 'name' | 'status'> {
+  password?: string;
+  confirmPassword?: string;
 }
 
 export interface UserGroup {
@@ -73,6 +98,7 @@ export interface UserGroup {
 export interface RestrictionGroup {
   id: string;
   name: string;
+  description?: string;
   allowedOlts: string[];
   allowedZones: string[];
   allowedActions: string[];

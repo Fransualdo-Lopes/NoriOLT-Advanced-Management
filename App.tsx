@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ViewType } from './types';
+import { ViewType, SettingsTab } from './types';
 import { Language, translations } from './translations';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Permission } from './roles';
@@ -18,8 +18,14 @@ import SettingsView from './views/SettingsView';
 const AppContent: React.FC = () => {
   const { isAuthenticated, logout, hasPermission } = useAuth();
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   const [language, setLanguage] = useState<Language>('en');
   const t = translations[language];
+
+  const navigateToSettings = (tab: SettingsTab = 'general') => {
+    setSettingsTab(tab);
+    setActiveView('settings');
+  };
 
   const renderProtectedView = (viewId: ViewType, permission: Permission, component: React.ReactNode) => {
     if (hasPermission(permission)) {
@@ -66,7 +72,7 @@ const AppContent: React.FC = () => {
         return renderProtectedView(
           'settings',
           Permission.VIEW_USERS,
-          <SettingsView language={language} />
+          <SettingsView language={language} initialTab={settingsTab} />
         );
       default:
         return (
@@ -87,6 +93,7 @@ const AppContent: React.FC = () => {
     <Layout 
       activeView={activeView} 
       setActiveView={setActiveView}
+      navigateToSettings={navigateToSettings}
       language={language}
       setLanguage={setLanguage}
       onLogout={logout}

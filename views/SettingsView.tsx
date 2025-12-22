@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, Users, Key, CreditCard, ChevronRight } from 'lucide-react';
 import { Language, translations } from '../translations';
 import { SettingsTab } from '../types';
@@ -8,11 +8,16 @@ import MaintenanceView from './MaintenanceView';
 
 interface SettingsViewProps {
   language: Language;
+  initialTab?: SettingsTab;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ language }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ language, initialTab = 'general' }) => {
   const t = translations[language];
-  const [activeTab, setActiveTab] = useState<SettingsTab>('general');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const tabs = [
     { id: 'general', label: 'General' },

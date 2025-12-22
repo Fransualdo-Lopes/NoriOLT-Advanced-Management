@@ -75,6 +75,15 @@ export const translations = {
     noPresets: "No presets found",
     compatibleWith: "Compatible with",
     
+    // ONU Details
+    onuDetails: "Device Details",
+    ipAddress: "IP Address",
+    macAddress: "MAC Address",
+    configProfile: "Profile",
+    lastSeen: "Last Seen",
+    serialNumber: "Serial Number",
+    close: "Close",
+    
     // User Management
     general: "General",
     users: "Users",
@@ -86,8 +95,8 @@ export const translations = {
     createRestriction: "Create a new restriction group",
     viewRestrictions: "View restriction groups",
     viewLogs: "View logs",
-    operatorId: "Operator ID",
-    accessKey: "Access Key",
+    operatorId: "ID Operador",
+    accessKey: "Chave de Acesso",
     email: "Email",
     username: "Username",
     assignedGroups: "Assigned Groups",
@@ -95,8 +104,19 @@ export const translations = {
     auditLogs: "Audit Logs",
     targetResource: "Target Resource",
     timestamp: "Timestamp",
-    ipAddress: "IP Address",
-    result: "Result"
+    // Removed duplicate ipAddress property on line 107
+    result: "Result",
+    firstName: "First Name",
+    lastName: "Last Name",
+    phone: "Phone",
+    language: "Language",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    forcePassChange: "Force password change on first login",
+    allowedIps: "Allowed IPs (CIDR)",
+    noRestrictions: "No group / no restriction",
+    saveUser: "Save User",
+    discardChanges: "Discard Changes"
   },
   pt: {
     dashboard: "Painel",
@@ -173,6 +193,15 @@ export const translations = {
     noPresets: "Nenhum preset encontrado",
     compatibleWith: "Compatível com",
     
+    // ONU Details
+    onuDetails: "Detalhes do Dispositivo",
+    ipAddress: "Endereço IP",
+    macAddress: "Endereço MAC",
+    configProfile: "Perfil",
+    lastSeen: "Visto pela última vez",
+    serialNumber: "Número de Série",
+    close: "Fechar",
+    
     // User Management
     general: "Geral",
     users: "Usuários",
@@ -193,8 +222,19 @@ export const translations = {
     auditLogs: "Logs de Auditoria",
     targetResource: "Recurso Alvo",
     timestamp: "Data/Hora",
-    ipAddress: "Endereço IP",
-    result: "Resultado"
+    // Removed duplicate ipAddress property on line 225
+    result: "Resultado",
+    firstName: "Nome",
+    lastName: "Sobrenome",
+    phone: "Telefone",
+    language: "Idioma",
+    password: "Senha",
+    confirmPassword: "Confirmar Senha",
+    forcePassChange: "Forçar troca de senha no primeiro login",
+    allowedIps: "IPs Permitidos (CIDR)",
+    noRestrictions: "Sem grupo / sem restrição",
+    saveUser: "Salvar Usuário",
+    discardChanges: "Descartar Alterações"
   }
 };
 
