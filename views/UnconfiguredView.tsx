@@ -3,7 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   RefreshCcw, History, Search, 
   PlusCircle, BookOpen, Loader2, Server,
-  Cpu, Activity, Octagon, CheckCircle2, AlertTriangle, Zap, ZapOff
+  Cpu, Activity, Octagon, CheckCircle2, AlertTriangle, Zap, ZapOff,
+  Settings2, LayoutGrid, ListFilter
 } from 'lucide-react';
 import { Language, translations } from '../translations';
 import { UnconfiguredONU, OLT } from '../types';
@@ -26,6 +27,7 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
   const [filterOltId, setFilterOltId] = useState('any');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [socketStatus, setSocketStatus] = useState<SocketStatus>('disconnected');
+  const [isToolbarExpanded, setIsToolbarExpanded] = useState(false);
 
   // Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -143,12 +145,12 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
         </div>
       )}
 
-      {/* Top Controls - Optimized for Mobile */}
+      {/* Top Controls - Optimized for Mobile Visibility */}
       <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         
-        {/* Row 1: OLT Filter & Refresh */}
+        {/* OLT Filter & Refresh: Improved grid for mobile */}
         <div className="flex items-center gap-2 sm:gap-4 w-full xl:w-auto">
-          <div className="flex-1 sm:flex-none flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5">
+          <div className="flex-1 sm:flex-none flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 sm:px-4 py-2.5">
             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OLT</label>
             <select 
               className="bg-transparent text-xs sm:text-sm font-bold text-slate-700 outline-none cursor-pointer flex-1"
@@ -172,30 +174,49 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
           </button>
         </div>
 
-        {/* Row 2: Status Tray - Scrollable on Mobile */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 sm:pb-0">
-          
-          {/* Socket Status Pill */}
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[9px] font-black uppercase tracking-[0.1em] transition-all whitespace-nowrap shrink-0 ${
-            socketStatus === 'connected' ? 'bg-green-50 border-green-100 text-green-600' : 
-            socketStatus === 'simulated' ? 'bg-blue-50 border-blue-100 text-blue-600' : 
-            socketStatus === 'connecting' ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-red-50 border-red-100 text-red-600'
-          }`}>
-            {(socketStatus === 'connected' || socketStatus === 'simulated') ? <Zap size={14} fill="currentColor" /> : <ZapOff size={14} />}
-            Live OLT Link: <span className="opacity-70 ml-1">{socketStatus}</span>
-          </div>
+        {/* Status Tray: Smart expansion logic for Mobile */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 flex-1 xl:justify-end">
+          <div className="flex items-center gap-2">
+            {/* Nav Container: Switches between scroll and wrap grid */}
+            <div className={`flex items-center gap-2 transition-all duration-300 flex-1 ${
+              isToolbarExpanded ? 'flex-wrap' : 'overflow-x-auto scrollbar-hide flex-nowrap'
+            }`}>
+              
+              {/* Socket Status Pill */}
+              <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-[9px] font-black uppercase tracking-[0.1em] transition-all whitespace-nowrap shrink-0 ${
+                socketStatus === 'connected' ? 'bg-green-50 border-green-100 text-green-600' : 
+                socketStatus === 'simulated' ? 'bg-blue-50 border-blue-100 text-blue-600' : 
+                socketStatus === 'connecting' ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-red-50 border-red-100 text-red-600'
+              } ${isToolbarExpanded ? 'w-full md:w-auto' : ''}`}>
+                {(socketStatus === 'connected' || socketStatus === 'simulated') ? <Zap size={14} fill="currentColor" /> : <ZapOff size={14} />}
+                Live OLT Link: <span className="opacity-70 ml-1">{socketStatus}</span>
+              </div>
 
-          {/* Auto Actions & History Tray */}
-          <div className="flex items-center gap-2 bg-slate-50/80 p-1.5 rounded-xl border border-slate-100 shrink-0">
-            <div className="px-2 flex items-center gap-1.5 border-r border-slate-200">
-               <Activity size={12} className="text-blue-500" />
-               <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Tools</span>
+              {/* Auto Actions & History Tray */}
+              <div className={`flex items-center gap-2 bg-slate-50/80 p-1.5 rounded-xl border border-slate-100 shrink-0 ${
+                isToolbarExpanded ? 'w-full md:w-auto flex-wrap sm:flex-nowrap' : ''
+              }`}>
+                <div className="px-2 flex items-center gap-1.5 border-r border-slate-200">
+                   <Activity size={12} className="text-blue-500" />
+                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Tools</span>
+                </div>
+                <button className={`px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all ${isToolbarExpanded ? 'flex-1 sm:flex-none' : ''}`}>
+                  {t.configureActions}
+                </button>
+                <button className={`px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all flex items-center justify-center gap-1.5 ${isToolbarExpanded ? 'flex-1 sm:flex-none' : ''}`}>
+                  <History size={11} /> {t.taskHistory}
+                </button>
+              </div>
             </div>
-            <button className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all">
-              {t.configureActions}
-            </button>
-            <button className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all flex items-center gap-1.5">
-              <History size={11} /> {t.taskHistory}
+
+            {/* Expansion Toggle Button (Mobile Only) */}
+            <button 
+              onClick={() => setIsToolbarExpanded(!isToolbarExpanded)}
+              className={`md:hidden p-2.5 rounded-xl border transition-all active:scale-95 flex items-center justify-center shrink-0 ${
+                isToolbarExpanded ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-400'
+              }`}
+            >
+              {isToolbarExpanded ? <LayoutGrid size={18} /> : <ListFilter size={18} />}
             </button>
           </div>
         </div>
@@ -229,7 +250,7 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
               </div>
 
               <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto custom-scrollbar">
                   <table className="w-full text-left border-collapse min-w-[800px]">
                     <thead className="bg-slate-50/80 border-b border-slate-100">
                       <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
