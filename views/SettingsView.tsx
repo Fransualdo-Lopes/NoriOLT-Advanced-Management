@@ -4,6 +4,7 @@ import { Settings, Users, Key, CreditCard, ChevronRight } from 'lucide-react';
 import { Language, translations } from '../translations';
 import { SettingsTab } from '../types';
 import UsersTab from './settings/UsersTab';
+import GeneralTab from './settings/GeneralTab';
 import MaintenanceView from './MaintenanceView';
 
 interface SettingsViewProps {
@@ -29,7 +30,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ language, initialTab = 'gen
   const renderTabContent = () => {
     switch (activeTab) {
       case 'general':
-        return <GeneralSettings language={language} />;
+        return <GeneralTab language={language} />;
       case 'users':
         return <UsersTab language={language} />;
       default:
@@ -45,13 +46,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ language, initialTab = 'gen
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Horizontal Tab Bar - Fixed to match Image 4 */}
+      {/* Horizontal Tab Bar */}
       <div className="flex items-center gap-8 border-b border-slate-200 mb-6 overflow-x-auto scrollbar-hide">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as SettingsTab)}
-            className={`pb-4 px-1 text-sm font-semibold transition-all relative ${
+            className={`pb-4 px-1 text-sm font-semibold transition-all relative whitespace-nowrap ${
               activeTab === tab.id 
                 ? 'text-blue-600' 
                 : 'text-slate-500 hover:text-slate-800'
@@ -66,58 +67,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({ language, initialTab = 'gen
       </div>
 
       {/* Content Area */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 min-h-[500px]">
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-10 min-h-[600px]">
         {renderTabContent()}
-      </div>
-    </div>
-  );
-};
-
-const GeneralSettings: React.FC<{ language: Language }> = ({ language }) => {
-  return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Action Buttons (Match Image 3) */}
-      <div className="flex gap-3">
-        <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition-all">
-          Edit general settings
-        </button>
-        <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition-all">
-          See history
-        </button>
-      </div>
-
-      {/* Settings Table (Match Image 3) */}
-      <div className="overflow-hidden border border-slate-100 rounded-lg shadow-sm">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50 border-b border-slate-100">
-            <tr className="text-xs font-black text-slate-500 uppercase tracking-widest">
-              <th className="px-6 py-4">Setting</th>
-              <th className="px-6 py-4">Value</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">
-            <tr>
-              <td className="px-6 py-4 text-slate-600">Title</td>
-              <td className="px-6 py-4 font-bold text-slate-900 uppercase">JETZ INTERNET</td>
-            </tr>
-            <tr>
-              <td className="px-6 py-4 text-slate-600">Timezone</td>
-              <td className="px-6 py-4">America/Belem</td>
-            </tr>
-            <tr>
-              <td className="px-6 py-4 text-slate-600">IPs allowed to access JETZOLT</td>
-              <td className="px-6 py-4">Allowed from anywhere</td>
-            </tr>
-            <tr>
-              <td className="px-6 py-4 text-slate-600">Time limit for installers to see ONUs (days)</td>
-              <td className="px-6 py-4 font-bold">5</td>
-            </tr>
-            <tr>
-              <td className="px-6 py-4 text-slate-600">Language</td>
-              <td className="px-6 py-4">English</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   );

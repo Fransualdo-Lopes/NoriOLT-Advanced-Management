@@ -83,6 +83,27 @@ export interface User {
   permissions?: UserPermissions;
 }
 
+// --- System Configuration ---
+export interface SystemSettings {
+  title: string;
+  timezone: string;
+  allowedIps: string;
+  installerTimeLimitDays: number;
+  defaultLanguage: string;
+}
+
+export interface ConfigHistoryEntry {
+  id: string;
+  userId: string;
+  userName: string;
+  timestamp: string;
+  changes: {
+    field: string;
+    oldValue: any;
+    newValue: any;
+  }[];
+}
+
 export interface UserCreationPayload extends Omit<User, 'id' | 'name' | 'status'> {
   password?: string;
   confirmPassword?: string;
