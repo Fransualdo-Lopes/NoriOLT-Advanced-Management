@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Globe, LayoutGrid, Wand2, CheckCircle, BarChart2, Activity, 
-  Bell, LogOut, Menu, X, Settings, ChevronDown, User as UserIcon, Shield
+  Bell, LogOut, Menu, X, Settings, ChevronDown, User as UserIcon, Shield, Languages
 } from 'lucide-react';
 import { ViewType, SettingsTab } from '../types';
 import { Language, translations } from '../translations';
@@ -22,8 +22,12 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, navigateToSettings, language, setLanguage, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLangOpen, setIsLangOpen] = useState(false);
   const [isUserHovered, setIsUserHovered] = useState(false);
+  
   const settingsRef = useRef<HTMLDivElement>(null);
+  const langRef = useRef<HTMLDivElement>(null);
+  
   const { user, hasPermission } = useAuth();
   const t = translations[language];
 
@@ -31,6 +35,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, na
     const handleClickOutside = (event: MouseEvent) => {
       if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
         setIsSettingsOpen(false);
+      }
+      if (langRef.current && !langRef.current.contains(event.target as Node)) {
+        setIsLangOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -66,6 +73,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, na
     if (user?.role === 'ADMIN' && navigateToSettings) {
       navigateToSettings('users');
     }
+  };
+
+  const toggleLanguage = (lang: Language) => {
+    setLanguage(lang);
+    setIsLangOpen(false);
   };
 
   return (
@@ -116,7 +128,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, na
                 }`}
               >
                 <Settings size={18} />
-                <span>Settings</span>
+                {/* Fixed: Use t.nav.settings to get the string as t.settings is the nested object */}
+                <span>{t.nav.settings}</span>
                 <ChevronDown size={14} className={`transition-transform duration-200 ${isSettingsOpen ? 'rotate-180' : ''}`} />
               </button>
 
@@ -139,6 +152,35 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, na
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            
+            {/* Language Switcher */}
+            <div className="relative" ref={langRef}>
+              <button 
+                onClick={() => setIsLangOpen(!isLangOpen)}
+                className="flex items-center gap-1.5 p-2 text-slate-400 hover:text-white transition-colors"
+              >
+                <Languages size={18} />
+                <span className="text-[10px] font-black uppercase">{language}</span>
+              </button>
+
+              {isLangOpen && (
+                <div className="absolute top-full right-0 mt-2 w-32 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                  <button 
+                    onClick={() => toggleLanguage('en')}
+                    className={`w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${language === 'en' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    English {language === 'en' && <CheckCircle size={10} />}
+                  </button>
+                  <button 
+                    onClick={() => toggleLanguage('pt')}
+                    className={`w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${language === 'pt' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    Português {language === 'pt' && <CheckCircle size={10} />}
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button className="hidden sm:block p-2 text-slate-400 hover:text-white">
               <Bell size={18} />
             </button>
@@ -235,10 +277,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, na
               </button>
             ))}
 
-            {/* Mobile Settings Section (New) */}
+            {/* Mobile Settings Section */}
             <div className="pt-6 mt-4 border-t border-white/5">
               <div className="px-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                <Settings size={14} /> {t.settings}
+                {/* Fixed: Explicit access to nav.settings string */}
+                <Settings size={14} /> {t.nav.settings}
               </div>
               <div className="grid grid-cols-1 gap-1">
                 {settingsOptions.map((opt, idx) => (
@@ -250,6 +293,27 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, na
                     {opt.label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Mobile Language Section */}
+            <div className="pt-6 mt-4 border-t border-white/5">
+              <div className="px-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <Languages size={14} /> {t.language}
+              </div>
+              <div className="flex flex-col gap-1">
+                <button 
+                  onClick={() => toggleLanguage('en')}
+                  className={`w-full text-left px-8 py-2 text-xs font-bold transition-colors ${language === 'en' ? 'text-blue-400' : 'text-slate-400'}`}
+                >
+                  English
+                </button>
+                <button 
+                  onClick={() => toggleLanguage('pt')}
+                  className={`w-full text-left px-8 py-2 text-xs font-bold transition-colors ${language === 'pt' ? 'text-blue-400' : 'text-slate-400'}`}
+                >
+                  Português (BR)
+                </button>
               </div>
             </div>
           </nav>

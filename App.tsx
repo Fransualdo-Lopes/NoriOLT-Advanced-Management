@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { ViewType, SettingsTab } from './types';
-import { Language, translations } from './translations';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { I18nProvider, useTranslation } from './contexts/I18nContext';
 import { Permission } from './roles';
 import Layout from './components/Layout';
 import DashboardView from './views/DashboardView';
@@ -14,17 +14,23 @@ import LoginView from './views/LoginView';
 import AccessDeniedView from './views/AccessDeniedView';
 import PresetManagerView from './views/PresetManagerView';
 import SettingsView from './views/SettingsView';
+import OnuDetailsView from './views/OnuDetailsView';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated, logout, hasPermission } = useAuth();
+  const { language, setLanguage, t } = useTranslation();
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
-  const [language, setLanguage] = useState<Language>('en');
-  const t = translations[language];
+  const [selectedOnuId, setSelectedOnuId] = useState<string | null>(null);
 
   const navigateToSettings = (tab: SettingsTab = 'general') => {
     setSettingsTab(tab);
     setActiveView('settings');
+  };
+
+  const navigateToOnuDetails = (id: string) => {
+    setSelectedOnuId(id);
+    setActiveView('onu-details');
   };
 
   const renderProtectedView = (viewId: ViewType, permission: Permission, component: React.ReactNode) => {
@@ -42,7 +48,7 @@ const AppContent: React.FC = () => {
         return renderProtectedView(
           'configured', 
           Permission.VIEW_CONFIGURED, 
-          <ConfiguredView language={language} onAddOnu={() => setActiveView('provisioning')} />
+          <ConfiguredView language={language} onAddOnu={() => setActiveView('provisioning')} onViewOnu={navigateToOnuDetails} />
         );
       case 'unconfigured':
         return renderProtectedView(
@@ -74,11 +80,21 @@ const AppContent: React.FC = () => {
           Permission.VIEW_USERS,
           <SettingsView language={language} initialTab={settingsTab} />
         );
+      case 'onu-details':
+        return renderProtectedView(
+          'onu-details',
+          Permission.VIEW_CONFIGURED,
+          <OnuDetailsView 
+            onuId={selectedOnuId || ''} 
+            language={language} 
+            onBack={() => setActiveView('configured')} 
+          />
+        );
       default:
         return (
           <MaintenanceView 
             language={language}
-            viewName={t[activeView as keyof typeof t] || activeView} 
+            viewName={activeView} 
             onGoBack={() => setActiveView('dashboard')} 
           />
         );
@@ -107,7 +123,9 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => (
   <AuthProvider>
-    <AppContent />
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
   </AuthProvider>
 );
 

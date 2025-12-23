@@ -13,8 +13,12 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('nori_auth_token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const lang = localStorage.getItem('nori_language') || 'en';
+    
+    if (config.headers) {
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+      // Inform the backend which language the user expects for error messages
+      config.headers['Accept-Language'] = lang;
     }
     return config;
   },
@@ -26,7 +30,6 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('nori_auth_token');
-      // In a real app, you might trigger a redirect to login here
     }
     return Promise.reject(error);
   }

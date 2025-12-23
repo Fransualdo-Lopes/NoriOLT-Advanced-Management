@@ -5,10 +5,12 @@
 
 // --- OLT Types ---
 export type OltStatus = 'online' | 'offline' | 'maintenance';
+export type Manufacturer = 'Huawei' | 'ZTE' | 'Nokia' | 'VSOL' | 'Datacom' | 'Dasan' | 'Furukawa' | 'Fiberhome';
 
 export interface OLT {
   id: string;
   name: string;
+  manufacturer?: Manufacturer;
   uptime: string;
   temperature: number;
   status: OltStatus;
@@ -49,128 +51,58 @@ export interface ONU {
   upload?: string;
 }
 
-// --- User Management & RBAC ---
-export type UserStatus = 'active' | 'disabled';
-export type GroupType = 'admin' | 'tech_users' | 'read_only' | 'support';
-
-export interface UserPermissions {
-  viewDashboardStats: boolean;
-  viewPaymentOptions: boolean;
-  viewOnuCount: boolean;
-  deleteOnus: boolean;
-  batchOnuActions: boolean;
-  receiveExpiringAlerts: boolean;
-  receiveLoginIpAlerts: boolean;
-}
-
-export interface User {
+export interface EthernetPort {
   id: string;
-  firstName?: string;
-  lastName?: string;
-  name: string;
-  email: string;
-  phone?: string;
-  username: string;
-  role: string; // ADMIN | NOC | SUPPORT
-  groups: string[];
-  restrictionGroupId?: string;
-  status: UserStatus;
-  level?: string;
-  lastLogin?: string;
-  allowedIps?: string[];
-  language?: string;
-  forcePasswordChange?: boolean;
-  permissions?: UserPermissions;
+  label: string;
+  status: 'Up' | 'Down';
+  admin_status: 'Enabled' | 'Disabled';
+  speed: string;
+  mode: string;
 }
 
-// --- System Configuration ---
-export interface SystemSettings {
-  title: string;
-  timezone: string;
-  allowedIps: string;
-  installerTimeLimitDays: number;
-  defaultLanguage: string;
-}
-
-export interface ConfigHistoryEntry {
-  id: string;
-  userId: string;
-  userName: string;
-  timestamp: string;
-  changes: {
-    field: string;
-    oldValue: any;
-    newValue: any;
-  }[];
-}
-
-export interface UserCreationPayload extends Omit<User, 'id' | 'name' | 'status'> {
-  password?: string;
-  confirmPassword?: string;
-}
-
-export interface UserGroup {
+export interface WifiSSID {
   id: string;
   name: string;
-  description: string;
-  groupType: GroupType;
-  permissions: string[];
-  userCount: number;
-  createdAt?: string;
+  frequency: '2.4GHz' | '5GHz';
+  status: boolean;
+  security: string;
+  channel: number;
 }
 
-export interface RestrictionGroup {
+export interface ServicePort {
   id: string;
-  name: string;
-  description?: string;
-  allowedOlts: string[];
-  allowedZones: string[];
-  allowedActions: string[];
-  readOnly: boolean;
-  userCount: number;
+  svlan: number;
+  cvlan: number;
+  download: string;
+  upload: string;
+  status: string;
 }
 
-export interface AuditLog {
-  id: string;
-  userId: string;
-  userName: string;
-  action: string;
-  resource: string;
-  timestamp: string;
-  ip: string;
-  result: 'success' | 'denied';
+export interface OnuDetailed extends ONU {
+  vendor: string;
+  model: string;
+  firmware: string;
+  software_version: string;
+  rx_power: number;
+  tx_power: number;
+  distance: number; // in meters
+  temperature: number;
+  voltage: number;
+  frame: number;
+  slot: number;
+  port_id: number;
+  pon_type: 'GPON' | 'EPON';
+  ethernet_ports: EthernetPort[];
+  wifi_ssids: WifiSSID[];
+  service_ports: ServicePort[];
+  voip_details?: {
+    status: string;
+    ip: string;
+    uri: string;
+  };
 }
 
-// --- Monitoring & Stats ---
-export interface SummaryStats {
-  waitingAuth: number;
-  waitingSub: { d: number, resync: number, new: number };
-  online: number;
-  totalAuthorized: number;
-  offline: number;
-  offlineSub: { pwrFail: number, los: number, na: number };
-  lowSignal: number;
-  lowSignalSub: { warning: number, critical: number }
-}
-
-export interface ActivityEvent {
-  id: string;
-  message: string;
-  timestamp: string;
-  type: 'error' | 'success' | 'info' | 'warning';
-}
-
-export interface PONOutage {
-  id: string;
-  oltName: string;
-  boardPort: string;
-  onusAffected: number;
-  los: number;
-  power: number;
-  cause: string;
-  since: string;
-}
-
+// --- Provisioning & Presets ---
 export interface UnconfiguredONU {
   id: string;
   sn: string;
@@ -184,6 +116,18 @@ export interface UnconfiguredONU {
   supports_immediate_auth: boolean;
 }
 
+export interface OnuProvisionPayload {
+  olt_id: string;
+  board: number;
+  port: number;
+  sn: string;
+  name: string;
+  mode: OnuMode;
+  vlan: number;
+  profile: string;
+  preset_id?: string;
+}
+
 export interface ProvisioningPreset {
   id: string;
   name: string;
@@ -195,14 +139,87 @@ export interface ProvisioningPreset {
   pppoe_enabled: boolean;
   voip_enabled: boolean;
   tv_enabled: boolean;
-  description: string;
+  description?: string;
   created_at: string;
   wifi_ssid_suffix?: string;
 }
 
+// --- User Management & RBAC ---
+export type UserStatus = 'active' | 'disabled';
+export type GroupType = 'admin' | 'tech_users' | 'read_only' | 'support';
+
+export interface User {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  username: string;
+  role: string;
+  groups: string[];
+  restrictionGroupId?: string;
+  status: UserStatus;
+  level?: string;
+  lastLogin?: string;
+  allowedIps?: string[];
+  language?: string;
+  forcePasswordChange?: boolean;
+}
+
+// Added missing UserPermissions interface
+export interface UserPermissions {
+  viewDashboardStats: boolean;
+  viewPaymentOptions: boolean;
+  viewOnuCount: boolean;
+  deleteOnus: boolean;
+  batchOnuActions: boolean;
+  receiveExpiringAlerts: boolean;
+  receiveLoginIpAlerts: boolean;
+}
+
+// Added missing UserCreationPayload interface
+export interface UserCreationPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  username: string;
+  role: string;
+  groups: string[];
+  restrictionGroupId?: string;
+  password?: string;
+  confirmPassword?: string;
+  language?: string;
+  forcePasswordChange?: boolean;
+  allowedIps?: string[];
+  permissions?: UserPermissions;
+}
+
+export interface UserGroup {
+  id: string;
+  name: string;
+  description: string;
+  groupType: GroupType;
+  permissions: string[];
+  userCount: number;
+}
+
+export interface RestrictionGroup {
+  id: string;
+  name: string;
+  description: string;
+  allowedOlts: string[];
+  allowedZones: string[];
+  allowedActions: string[];
+  readOnly: boolean;
+  userCount: number;
+}
+
+// Added missing Auth interfaces
 export interface AuthCredentials {
   username: string;
-  password?: string;
+  password: string;
 }
 
 export interface AuthResponse {
@@ -210,16 +227,92 @@ export interface AuthResponse {
   user: User;
 }
 
-export interface OnuProvisionPayload {
-  olt_id: string;
-  board: number;
-  port: number;
-  sn: string;
-  name: string;
-  mode: string;
-  vlan: number;
-  profile: string;
+// --- Network Stats & Events ---
+export interface SummaryStats {
+  waitingAuth: number;
+  waitingSub: { d: number; resync: number; new: number };
+  online: number;
+  totalAuthorized: number;
+  offline: number;
+  offlineSub: { pwrFail: number; los: number; na: number };
+  lowSignal: number;
+  lowSignalSub: { warning: number; critical: number };
 }
 
-export type ViewType = 'dashboard' | 'unconfigured' | 'configured' | 'graphs' | 'diagnostics' | 'provisioning' | 'presets' | 'settings';
+export interface ActivityEvent {
+  id: string;
+  message: string;
+  timestamp: string;
+  type: 'error' | 'success' | 'info' | 'warning';
+}
+
+// Added missing PONOutage interface
+export interface PONOutage {
+  id: string;
+  oltName: string;
+  boardPort: string;
+  onusAffected: number;
+  los: number;
+  power: number;
+  cause: string;
+  since: string;
+}
+
+// Added missing ConfigChange interface
+export interface ConfigChange {
+  field: string;
+  oldValue: any;
+  newValue: any;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  action: string;
+  olt?: {
+    name: string;
+    manufacturer: Manufacturer;
+  };
+  onu_sn?: string;
+  user: {
+    username: string;
+    role: string;
+  };
+  ip: string;
+  timestamp: string;
+  status: 'success' | 'failure';
+  errorMessage?: string;
+  changes?: ConfigChange[]; // Added missing changes property
+}
+
+// Added missing AuditLog interface used in user management
+export interface AuditLog {
+  id: string;
+  userId: string;
+  userName: string;
+  action: string;
+  resource: string;
+  timestamp: string;
+  ip: string;
+  result: 'success' | 'failure';
+}
+
+// Added missing ConfigHistoryEntry interface
+export interface ConfigHistoryEntry {
+  id: string;
+  userId: string;
+  userName: string;
+  timestamp: string;
+  changes: ConfigChange[];
+}
+
+// --- System Configuration ---
+export interface SystemSettings {
+  title: string;
+  timezone: string;
+  allowedIps: string;
+  installerTimeLimitDays: number;
+  defaultLanguage: string;
+}
+
+export type ViewType = 'dashboard' | 'unconfigured' | 'configured' | 'graphs' | 'diagnostics' | 'provisioning' | 'presets' | 'settings' | 'onu-details';
 export type SettingsTab = 'general' | 'users' | 'apikey' | 'billing';

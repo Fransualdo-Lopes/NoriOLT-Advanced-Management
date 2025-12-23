@@ -30,7 +30,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({ language, initialTab = 'gen
   const renderTabContent = () => {
     switch (activeTab) {
       case 'general':
-        return <GeneralTab language={language} />;
+        // Fixed: GeneralTab does not take props
+        return <GeneralTab />;
       case 'users':
         return <UsersTab language={language} />;
       default:

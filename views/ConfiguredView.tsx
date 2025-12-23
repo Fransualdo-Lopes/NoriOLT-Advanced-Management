@@ -6,6 +6,12 @@ import OnuFiltersBar from '../components/OnuFilters';
 import { Language, translations } from '../translations';
 import { onuService, OnuFilters, OnuListResponse } from '../services/onuService';
 
+interface ConfiguredViewProps {
+  language: Language;
+  onAddOnu: () => void;
+  onViewOnu: (id: string) => void;
+}
+
 const INITIAL_FILTERS: OnuFilters = {
   search: '',
   olt_id: 'any',
@@ -15,7 +21,7 @@ const INITIAL_FILTERS: OnuFilters = {
   limit: 100
 };
 
-const ConfiguredView: React.FC<{ language: Language, onAddOnu: () => void }> = ({ language }) => {
+const ConfiguredView: React.FC<ConfiguredViewProps> = ({ language, onViewOnu }) => {
   const [filters, setFilters] = useState<OnuFilters>(INITIAL_FILTERS);
   const [data, setData] = useState<OnuListResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,6 +83,7 @@ const ConfiguredView: React.FC<{ language: Language, onAddOnu: () => void }> = (
          onus={data?.data || []}
          loading={loading}
          language={language}
+         onViewOnu={onViewOnu}
        />
     </div>
   );
