@@ -134,7 +134,7 @@ const OnuDetailsView: React.FC<OnuDetailsViewProps> = ({ onuId, language, onBack
         <div className="xl:col-span-4 space-y-6">
           
           {/* Card: Identity */}
-          <SectionCard icon={<ShieldCheck size={18}/>} title={t.identification}>
+          <SectionCard icon={<ShieldCheck size={18} className="text-emerald-500" />} title={t.identification}>
             <div className="grid grid-cols-1 gap-4">
                <InfoRow label={t.vendor} value={onu.vendor} />
                <InfoRow label={t.model} value={onu.model} />
@@ -146,7 +146,7 @@ const OnuDetailsView: React.FC<OnuDetailsViewProps> = ({ onuId, language, onBack
           </SectionCard>
 
           {/* Card: Topology */}
-          <SectionCard icon={<Network size={18}/>} title={t.networkTopology}>
+          <SectionCard icon={<Network size={18} className="text-blue-500" />} title={t.networkTopology}>
             <div className="grid grid-cols-1 gap-4">
                <InfoRow label="OLT Device" value={onu.olt || 'N/A'} highlight />
                <InfoRow label="Interface" value={`${onu.frame}/${onu.slot}/${onu.port_id}`} highlight />
@@ -157,28 +157,28 @@ const OnuDetailsView: React.FC<OnuDetailsViewProps> = ({ onuId, language, onBack
             </div>
           </SectionCard>
 
-          {/* Card: Actions Tray */}
-          <div className="bg-slate-900 rounded-3xl p-6 shadow-xl shadow-slate-900/10 border border-white/5 space-y-5">
-             <h3 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                <Zap size={14} /> {t.onuActions}
+          {/* Card: Actions Tray - Updated to Light Theme */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-5">
+             <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-2">
+                <Zap size={14} className="fill-current" /> {t.onuActions}
              </h3>
              <div className="grid grid-cols-2 gap-3">
-                <ActionBtn icon={<RefreshCw size={14}/>} label={t.reboot} color="bg-slate-800" onClick={() => setActiveModal('reboot')} />
-                <ActionBtn icon={<Database size={14}/>} label={t.resync} color="bg-slate-800" onClick={() => setActiveModal('resync')} />
-                <ActionBtn icon={<History size={14}/>} label={t.factoryReset} color="bg-amber-600/20 text-amber-500" onClick={() => setActiveModal('factory')} />
+                <ActionBtn icon={<RefreshCw size={14}/>} label={t.reboot} color="bg-slate-50 border-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-100" onClick={() => setActiveModal('reboot')} />
+                <ActionBtn icon={<Database size={14}/>} label={t.resync} color="bg-slate-50 border-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-100" onClick={() => setActiveModal('resync')} />
+                <ActionBtn icon={<History size={14}/>} label={t.factoryReset} color="bg-amber-50 border-amber-100 text-amber-600 hover:bg-amber-100" onClick={() => setActiveModal('factory')} />
                 <ActionBtn 
                   icon={onu.status === 'offline' ? <Play size={14}/> : <ZapOff size={14}/>} 
                   label={onu.status === 'offline' ? t.enableOnu : t.disableOnu} 
-                  color="bg-red-600/20 text-red-500" 
+                  color="bg-red-50 border-red-100 text-red-600 hover:bg-red-100" 
                   onClick={() => setActiveModal('disable')}
                 />
              </div>
              <PermissionGate permission={Permission.DELETE_ONU}>
                 <button 
                   onClick={() => setActiveModal('delete')}
-                  className="w-full py-4 border-2 border-dashed border-red-500/30 rounded-2xl text-[10px] font-black text-red-400 uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+                  className="w-full py-4 border-2 border-dashed border-red-200 rounded-2xl text-[10px] font-black text-red-500 uppercase tracking-widest hover:bg-red-50 hover:border-red-300 transition-all flex items-center justify-center gap-2"
                 >
-                  <Trash2 size={16} className="inline mr-2" /> Decommission Hardware
+                  <Trash2 size={16} /> Decommission Hardware
                 </button>
              </PermissionGate>
           </div>
@@ -393,9 +393,11 @@ const InfoRow = ({ label, value, mono, highlight }: any) => (
 const ActionBtn = ({ icon, label, color, onClick }: any) => (
   <button 
     onClick={onClick}
-    className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all shadow-sm active:scale-95 gap-2 border border-white/5 ${color} hover:brightness-125`}
+    className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all shadow-sm active:scale-95 gap-2 border border-slate-200 ${color} hover:shadow-md`}
   >
-    {icon}
+    <div className="p-2 bg-white/40 rounded-xl group-hover:scale-110 transition-transform">
+      {icon}
+    </div>
     <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
   </button>
 );
