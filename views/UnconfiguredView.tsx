@@ -10,16 +10,15 @@ import { Language, translations } from '../translations';
 import { UnconfiguredONU, OLT } from '../types';
 import { unconfiguredOnuService } from '../services/unconfiguredOnuService';
 import { oltService } from '../services/oltService';
-import { provisioningService } from '../services/provisioningService';
 import { usePolling } from '../hooks/usePolling';
 import { socketService, SocketStatus } from '../services/socketService';
-import ConfirmationModal from '../components/ConfirmationModal';
 
 interface UnconfiguredViewProps {
   language: Language;
+  onAuthorize: (onu: UnconfiguredONU) => void;
 }
 
-const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
+const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language, onAuthorize }) => {
   const t = translations[language];
   const [onus, setOnus] = useState<UnconfiguredONU[]>([]);
   const [olts, setOlts] = useState<OLT[]>([]);
@@ -28,11 +27,6 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [socketStatus, setSocketStatus] = useState<SocketStatus>('disconnected');
   const [isToolbarExpanded, setIsToolbarExpanded] = useState(false);
-
-  // Modal State
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [selectedOnu, setSelectedOnu] = useState<UnconfiguredONU | null>(null);
-  const [isAuthorizing, setIsAuthorizing] = useState(false);
 
   // Notification State
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
@@ -99,7 +93,7 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
   usePolling(
     () => fetchData(false), 
     30000, 
-    !isAuthModalOpen && !isAuthorizing && socketStatus !== 'connected' && socketStatus !== 'simulated'
+    socketStatus !== 'connected' && socketStatus !== 'simulated'
   );
 
   const groupedOnus = useMemo(() => {
@@ -111,27 +105,6 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
       return acc;
     }, {} as Record<string, { name: string; onus: UnconfiguredONU[] }>);
   }, [onus]);
-
-  const handleAuthorizeClick = (onu: UnconfiguredONU) => {
-    setSelectedOnu(onu);
-    setIsAuthModalOpen(true);
-  };
-
-  const handleConfirmAuthorization = async () => {
-    if (!selectedOnu) return;
-    setIsAuthorizing(true);
-    try {
-      await provisioningService.authorizeOnu(selectedOnu);
-      setOnus(prev => prev.filter(o => o.id !== selectedOnu.id));
-      setNotification({ type: 'success', message: `ONU ${selectedOnu.sn} authorized successfully.` });
-      setIsAuthModalOpen(false);
-    } catch (error: any) {
-      setNotification({ type: 'error', message: error.message || 'Authorization failed.' });
-    } finally {
-      setIsAuthorizing(false);
-      setTimeout(() => setNotification(null), 5000);
-    }
-  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -177,12 +150,10 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
         {/* Status Tray: Smart expansion logic for Mobile */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 flex-1 xl:justify-end">
           <div className="flex items-center gap-2">
-            {/* Nav Container: Switches between scroll and wrap grid */}
             <div className={`flex items-center gap-2 transition-all duration-300 flex-1 ${
               isToolbarExpanded ? 'flex-wrap' : 'overflow-x-auto scrollbar-hide flex-nowrap'
             }`}>
               
-              {/* Socket Status Pill */}
               <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-[9px] font-black uppercase tracking-[0.1em] transition-all whitespace-nowrap shrink-0 ${
                 socketStatus === 'connected' ? 'bg-green-50 border-green-100 text-green-600' : 
                 socketStatus === 'simulated' ? 'bg-blue-50 border-blue-100 text-blue-600' : 
@@ -192,7 +163,6 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
                 Live OLT Link: <span className="opacity-70 ml-1">{socketStatus}</span>
               </div>
 
-              {/* Auto Actions & History Tray */}
               <div className={`flex items-center gap-2 bg-slate-50/80 p-1.5 rounded-xl border border-slate-100 shrink-0 ${
                 isToolbarExpanded ? 'w-full md:w-auto flex-wrap sm:flex-nowrap' : ''
               }`}>
@@ -209,7 +179,6 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
               </div>
             </div>
 
-            {/* Expansion Toggle Button (Mobile Only) */}
             <button 
               onClick={() => setIsToolbarExpanded(!isToolbarExpanded)}
               className={`md:hidden p-2.5 rounded-xl border transition-all active:scale-95 flex items-center justify-center shrink-0 ${
@@ -288,7 +257,7 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
                           <td className="px-6 py-5">
                             <div className="flex items-center justify-center gap-2">
                               <button 
-                                onClick={() => handleAuthorizeClick(onu)}
+                                onClick={() => onAuthorize(onu)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/10 uppercase tracking-widest"
                               >
                                 {t.authorize}
@@ -305,39 +274,6 @@ const UnconfiguredView: React.FC<UnconfiguredViewProps> = ({ language }) => {
           ))}
         </div>
       )}
-
-      {/* Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onConfirm={handleConfirmAuthorization}
-        title="Authorize New Hardware"
-        description="Are you sure you want to authorize this ONU? The system will automatically apply the default service profile for this PON port."
-        confirmText="Authorize ONU"
-        cancelText="Discard"
-        isLoading={isAuthorizing}
-      >
-        {selectedOnu && (
-          <div className="grid grid-cols-2 gap-y-3">
-            <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Serial Number</p>
-              <p className="text-sm font-mono font-black text-blue-600">{selectedOnu.sn}</p>
-            </div>
-            <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Model</p>
-              <p className="text-sm font-bold text-slate-700">{selectedOnu.model}</p>
-            </div>
-            <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OLT Cluster</p>
-              <p className="text-sm font-bold text-slate-700">{selectedOnu.olt_name}</p>
-            </div>
-            <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Interface</p>
-              <p className="text-sm font-bold text-slate-700">{selectedOnu.pon_description}</p>
-            </div>
-          </div>
-        )}
-      </ConfirmationModal>
 
       {/* Bottom Footer Actions */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-center pt-8">

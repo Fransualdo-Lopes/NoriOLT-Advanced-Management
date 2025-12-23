@@ -1,20 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, X, Server, Hash, Settings2, Loader2, CheckCircle2, AlertTriangle, ShieldCheck, Zap } from 'lucide-react';
+import { Save, X, Plus, Info, Cpu } from 'lucide-react';
 import { Language, translations } from '../translations';
 import { oltService } from '../services/oltService';
 import { provisioningService } from '../services/provisioningService';
 import { presetService } from '../services/presetService';
-import { OLT, OnuProvisionPayload, ProvisioningPreset } from '../types';
+import { OLT, OnuProvisionPayload, ProvisioningPreset, UnconfiguredONU } from '../types';
 
 interface OnuProvisionFormProps {
   language: Language;
   onCancel: () => void;
   onSuccess: () => void;
-  initialSn?: string; // For auto-fill from unconfigured view
+  initialData?: UnconfiguredONU | null;
 }
 
-const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel, onSuccess, initialSn }) => {
+const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel, onSuccess, initialData }) => {
   const t = translations[language];
   const [olts, setOlts] = useState<OLT[]>([]);
   const [presets, setPresets] = useState<ProvisioningPreset[]>([]);
@@ -22,15 +22,28 @@ const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel,
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const [formData, setFormData] = useState<OnuProvisionPayload>({
-    olt_id: '',
-    board: 0,
-    port: 0,
-    sn: initialSn || '',
+  const [formData, setFormData] = useState({
+    usePreset: false,
+    presetId: '',
+    olt_id: initialData?.olt_id || '',
+    ponType: 'GPON',
+    gponChannel: 'GPON',
+    board: initialData?.board || 0,
+    port: initialData?.port || 0,
+    sn: initialData?.sn || '',
+    onuType: initialData?.model || 'EG8010H',
+    useCustomProfile: false,
+    mode: 'Bridge',
+    vlanId: '10',
+    zone: 'CEO',
+    odb: 'None',
+    odbPort: 'None',
+    downloadSpeed: '1G',
+    uploadSpeed: '1G',
     name: '',
-    mode: 'Router',
-    vlan: 100,
-    profile: 'Residential_100M'
+    addressComment: '',
+    externalId: initialData?.sn || '',
+    useGps: false
   });
 
   useEffect(() => {
@@ -40,55 +53,41 @@ const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel,
     ]).then(([oltData, presetData]) => {
       setOlts(oltData);
       setPresets(presetData);
-      if (oltData.length > 0) {
+      if (oltData.length > 0 && !formData.olt_id) {
         setFormData(prev => ({ ...prev, olt_id: oltData[0].id }));
       }
     });
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'board' || name === 'port' || name === 'vlan' ? parseInt(value) || 0 : value
-    }));
-  };
-
-  const applyPreset = (presetId: string) => {
-    const preset = presets.find(p => p.id === presetId);
-    if (!preset) return;
-
-    setFormData(prev => ({
-      ...prev,
-      mode: preset.mode,
-      vlan: preset.vlan,
-      profile: preset.service_profile, // Mapping service profile to the profile field for simplicity in mock
-      preset_id: presetId
-    }));
+    const { name, value, type } = e.target;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    setFormData(prev => ({ ...prev, [name]: val }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Basic Validation
-    if (!formData.sn.match(/^[A-Z0-9]{12}$/)) {
-      setErrorMessage('Invalid Serial Number. Must be 12 alphanumeric characters.');
-      setStatus('error');
-      return;
-    }
-
     setIsSubmitting(true);
     setStatus('idle');
-    setErrorMessage('');
 
     try {
-      await provisioningService.provisionOnu(formData);
+      const payload: OnuProvisionPayload = {
+        olt_id: formData.olt_id,
+        board: Number(formData.board),
+        port: Number(formData.port),
+        sn: formData.sn,
+        name: formData.name,
+        mode: formData.mode as any,
+        vlan: Number(formData.vlanId),
+        profile: formData.downloadSpeed,
+        preset_id: formData.usePreset ? formData.presetId : undefined
+      };
+
+      await provisioningService.provisionOnu(payload);
       setStatus('success');
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
+      setTimeout(onSuccess, 1500);
     } catch (err: any) {
-      setErrorMessage(err.message || 'OLT Synchronization failed.');
+      setErrorMessage(err.message || 'Operation failed.');
       setStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -97,216 +96,345 @@ const OnuProvisionForm: React.FC<OnuProvisionFormProps> = ({ language, onCancel,
 
   if (status === 'success') {
     return (
-      <div className="bg-white rounded-3xl shadow-2xl border border-green-100 p-12 text-center animate-in zoom-in duration-300">
-        <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-          <CheckCircle2 size={40} className="animate-bounce" />
+      <div className="bg-white rounded-xl shadow-xl border border-green-100 p-12 text-center w-full max-w-2xl mx-auto animate-in zoom-in duration-300">
+        <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Save size={32} className="animate-bounce" />
         </div>
-        <h2 className="text-2xl font-black text-slate-900 mb-2">ONU Authorized Successfully</h2>
-        <p className="text-slate-500">The hardware is now syncing with the OLT. Redirecting to inventory...</p>
+        <h2 className="text-xl font-black text-slate-900 uppercase italic tracking-tighter">Authorization successful</h2>
+        <p className="text-slate-500 text-sm mt-2">Hardware sync with OLT in progress.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-4xl mx-auto overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-[#0f172a] text-white p-6 flex items-center justify-between border-b border-white/5">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/20">
-            <ShieldCheck size={24} />
+    <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-4xl mx-auto overflow-hidden animate-in fade-in duration-500" style={{ colorScheme: 'light' }}>
+      {/* Header */}
+      <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-600/20">
+            <Cpu size={20} />
           </div>
-          <div>
-            <h2 className="text-lg font-black tracking-tight uppercase italic">{t.newProvisioning}</h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nori-Engine v3.5 Secure Provisioning</p>
-          </div>
+          <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest">{t.authorizeOnu}</h2>
         </div>
-        <button 
-          onClick={onCancel}
-          className="p-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-xl transition-all"
-        >
-          <X size={24} />
+        <button onClick={onCancel} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all">
+          <X size={20} />
         </button>
       </div>
-      
-      <div className="bg-blue-50/50 p-4 border-b border-blue-100/30 flex items-center gap-4">
-        <div className="flex items-center gap-2 text-[10px] font-black text-blue-600 uppercase tracking-widest whitespace-nowrap">
-          <Zap size={14} className="fill-current" /> {t.applyPreset}:
-        </div>
-        <select 
-          onChange={(e) => applyPreset(e.target.value)}
-          className="bg-white border border-blue-200 rounded-xl px-3 py-1.5 text-xs font-bold text-blue-700 outline-none focus:ring-2 focus:ring-blue-500/10 transition-all flex-1 md:flex-none md:min-w-[200px]"
-          defaultValue=""
-        >
-          <option value="" disabled>Choose a template...</option>
-          {presets.map(p => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-      </div>
 
-      <form onSubmit={handleSubmit} className="p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {/* Hardware Connection Section */}
-          <div className="space-y-6">
-            <h3 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2 mb-2">
-              <Server size={14} /> {t.hardwareLink}
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Select OLT Target</label>
-                <select 
-                  name="olt_id"
-                  value={formData.olt_id}
-                  onChange={handleChange}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all appearance-none"
-                >
-                  {olts.map(olt => (
-                    <option key={olt.id} value={olt.id}>{olt.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Board Index</label>
-                  <input 
-                    name="board"
-                    type="number" 
-                    value={formData.board}
-                    onChange={handleChange}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Port Index</label>
-                  <input 
-                    name="port"
-                    type="number" 
-                    value={formData.port}
-                    onChange={handleChange}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all" 
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Hardware Serial (SN)</label>
-                <div className="relative">
-                  <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                  <input 
-                    name="sn"
-                    type="text" 
-                    value={formData.sn}
-                    onChange={handleChange}
-                    placeholder="e.g. HWTC9D70C5B4" 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-sm font-mono font-black text-blue-600 uppercase outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all" 
-                    required
-                  />
-                </div>
-              </div>
-            </div>
+      <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-4">
+        {/* Use Preset */}
+        <FormRow label="Use Preset">
+          <div className="flex items-center gap-3">
+            <input 
+              type="checkbox" 
+              name="usePreset" 
+              checked={formData.usePreset} 
+              onChange={handleChange} 
+              className="w-4 h-4 rounded border-slate-300 bg-white text-blue-600 focus:ring-blue-500 accent-blue-600 transition-all cursor-pointer" 
+            />
+            <select 
+              name="presetId" 
+              value={formData.presetId} 
+              onChange={handleChange} 
+              disabled={!formData.usePreset}
+              className="flex-1 bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-400 transition-all"
+            >
+              <option value="">None</option>
+              {presets.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            <button type="button" className="p-1.5 bg-slate-400 text-white rounded hover:bg-slate-500 transition-all shadow-sm">
+              <Plus size={16} />
+            </button>
           </div>
+        </FormRow>
 
-          {/* Software Configuration Section */}
-          <div className="space-y-6">
-            <h3 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] flex items-center gap-2 mb-2">
-              <Settings2 size={14} /> {t.logicServices}
-            </h3>
+        {/* OLT */}
+        <FormRow label="OLT">
+          <select 
+            name="olt_id" 
+            value={formData.olt_id} 
+            onChange={handleChange} 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all"
+          >
+            {olts.map(o => <option key={o.id} value={o.id}>{o.id} - {o.name}</option>)}
+          </select>
+        </FormRow>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Subscriber Identity</label>
-                <input 
-                  name="name"
-                  type="text" 
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="e.g. John Wick - Apt 402" 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all" 
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Operational Mode</label>
-                  <select 
-                    name="mode"
-                    value={formData.mode}
-                    onChange={handleChange}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all appearance-none"
-                  >
-                    <option value="Router">Router (PPPoE)</option>
-                    <option value="Bridge">Bridge (Transparent)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">VLAN Tag</label>
-                  <input 
-                    name="vlan"
-                    type="number" 
-                    value={formData.vlan}
-                    onChange={handleChange}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-black text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all" 
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Traffic Profile</label>
-                <select 
-                  name="profile"
-                  value={formData.profile}
-                  onChange={handleChange}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all appearance-none"
-                >
-                  <option value="Residential_100M">Residential 100M</option>
-                  <option value="Residential_300M">Residential 300M</option>
-                  <option value="Residential_600M">Residential 600M</option>
-                  <option value="Business_Dedicated_1G">Business Dedicated 1G</option>
-                </select>
-              </div>
-            </div>
+        {/* PON type */}
+        <FormRow label="PON type">
+          <div className="flex items-center gap-6">
+            <RadioOption label="GPON" name="ponType" value="GPON" current={formData.ponType} onChange={handleChange} />
+            <RadioOption label="EPON" name="ponType" value="EPON" current={formData.ponType} onChange={handleChange} />
           </div>
-        </div>
+        </FormRow>
 
+        {/* GPON channel */}
+        <FormRow label="GPON channel">
+          <div className="flex items-center gap-6">
+            <RadioOption label="GPON" name="gponChannel" value="GPON" current={formData.gponChannel} onChange={handleChange} />
+            <RadioOption label="XG-PON" name="gponChannel" value="XG-PON" current={formData.gponChannel} onChange={handleChange} />
+            <RadioOption label="XGS-PON" name="gponChannel" value="XGS-PON" current={formData.gponChannel} onChange={handleChange} />
+          </div>
+        </FormRow>
+
+        {/* Board */}
+        <FormRow label="Board">
+          <input 
+            type="number" 
+            name="board" 
+            value={formData.board} 
+            onChange={handleChange} 
+            className="w-full bg-slate-50 border border-slate-200 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all" 
+          />
+        </FormRow>
+
+        {/* Port */}
+        <FormRow label="Port">
+          <input 
+            type="number" 
+            name="port" 
+            value={formData.port} 
+            onChange={handleChange} 
+            className="w-full bg-slate-50 border border-slate-200 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all" 
+          />
+        </FormRow>
+
+        {/* SN */}
+        <FormRow label="SN">
+          <input 
+            type="text" 
+            name="sn" 
+            value={formData.sn} 
+            onChange={handleChange} 
+            className="w-full bg-slate-50 border border-slate-200 rounded px-3 py-1.5 text-sm font-mono font-bold outline-none focus:border-blue-500 uppercase transition-all" 
+          />
+        </FormRow>
+
+        {/* ONU type */}
+        <FormRow label="ONU type">
+          <select 
+            name="onuType" 
+            value={formData.onuType} 
+            onChange={handleChange} 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all"
+          >
+            <option value="EG8010H">EG8010H</option>
+            <option value="EG8145X6">EG8145X6</option>
+            <option value="HG8245Q2">HG8245Q2</option>
+          </select>
+        </FormRow>
+
+        {/* Use custom profile */}
+        <FormRow label="">
+          <div className="flex items-center gap-3">
+            <input 
+              type="checkbox" 
+              name="useCustomProfile" 
+              checked={formData.useCustomProfile} 
+              onChange={handleChange} 
+              className="w-4 h-4 rounded border-slate-300 bg-white text-blue-600 focus:ring-blue-500 accent-blue-600 transition-all cursor-pointer" 
+            />
+            <label className="text-[11px] font-medium text-slate-600 select-none">Use custom profile (For better compatibility with generic ONUs)</label>
+          </div>
+        </FormRow>
+
+        {/* ONU mode */}
+        <FormRow label="ONU mode">
+          <div className="flex items-center gap-6">
+            <RadioOption label="Bridging" name="mode" value="Bridge" current={formData.mode} onChange={handleChange} />
+            <RadioOption label="Routing" name="mode" value="Router" current={formData.mode} onChange={handleChange} />
+          </div>
+        </FormRow>
+
+        {/* User VLAN-ID */}
+        <FormRow label="User VLAN-ID">
+          <select 
+            name="vlanId" 
+            value={formData.vlanId} 
+            onChange={handleChange} 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all"
+          >
+            <option value="10">10 - ONUs Bridge Res</option>
+            <option value="100">100 - Internet</option>
+            <option value="200">200 - Management</option>
+          </select>
+        </FormRow>
+
+        {/* Zone */}
+        <FormRow label="Zone">
+          <select 
+            name="zone" 
+            value={formData.zone} 
+            onChange={handleChange} 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all"
+          >
+            <option value="CEO">CEO</option>
+            <option value="NORTH">North Zone</option>
+            <option value="SOUTH">South Zone</option>
+          </select>
+        </FormRow>
+
+        {/* ODB (Splitter) */}
+        <FormRow label="ODB (Splitter)">
+          <select 
+            name="odb" 
+            value={formData.odb} 
+            onChange={handleChange} 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all"
+          >
+            <option value="None">None</option>
+            <option value="ODB-01">ODB-01</option>
+            <option value="ODB-02">ODB-02</option>
+          </select>
+        </FormRow>
+
+        {/* ODB port */}
+        <FormRow label="ODB port">
+          <select 
+            name="odbPort" 
+            value={formData.odbPort} 
+            onChange={handleChange} 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all"
+          >
+            <option value="None">None</option>
+            <option value="1">Port 1</option>
+            <option value="2">Port 2</option>
+          </select>
+        </FormRow>
+
+        {/* Download speed */}
+        <FormRow label="Download speed">
+          <select 
+            name="downloadSpeed" 
+            value={formData.downloadSpeed} 
+            onChange={handleChange} 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all"
+          >
+            <option value="1G">1G</option>
+            <option value="600M">600M</option>
+            <option value="300M">300M</option>
+          </select>
+        </FormRow>
+
+        {/* Upload speed */}
+        <FormRow label="Upload speed">
+          <select 
+            name="uploadSpeed" 
+            value={formData.uploadSpeed} 
+            onChange={handleChange} 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all"
+          >
+            <option value="1G">1G</option>
+            <option value="600M">600M</option>
+            <option value="300M">300M</option>
+          </select>
+        </FormRow>
+
+        {/* Name */}
+        <FormRow label="Name">
+          <input 
+            type="text" 
+            name="name" 
+            value={formData.name} 
+            onChange={handleChange} 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all" 
+          />
+        </FormRow>
+
+        {/* Address or comment */}
+        <FormRow label="Address or comment">
+          <input 
+            type="text" 
+            name="addressComment" 
+            value={formData.addressComment} 
+            onChange={handleChange} 
+            placeholder="Address or comment (optional)" 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all" 
+          />
+        </FormRow>
+
+        {/* ONU external ID */}
+        <FormRow label="ONU external ID">
+          <input 
+            type="text" 
+            name="externalId" 
+            value={formData.externalId} 
+            onChange={handleChange} 
+            className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 transition-all" 
+          />
+        </FormRow>
+
+        {/* Use GPS */}
+        <FormRow label="">
+          <div className="flex items-center gap-3">
+            <input 
+              type="checkbox" 
+              name="useGps" 
+              checked={formData.useGps} 
+              onChange={handleChange} 
+              className="w-4 h-4 rounded border-slate-300 bg-white text-blue-600 focus:ring-blue-500 accent-blue-600 transition-all cursor-pointer" 
+            />
+            <label className="text-[11px] font-medium text-slate-600 select-none">Use GPS</label>
+          </div>
+        </FormRow>
+
+        {/* Error Message */}
         {status === 'error' && (
-          <div className="mt-8 bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center gap-4 text-red-600 animate-in slide-in-from-top-2">
-            <AlertTriangle size={24} className="shrink-0" />
-            <div className="text-xs font-bold uppercase tracking-tight">
-              Provisioning Error: <span className="text-red-800">{errorMessage}</span>
-            </div>
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs font-bold border border-red-100 flex items-center gap-2 animate-in slide-in-from-top-2">
+            <Info size={14} /> {errorMessage}
           </div>
         )}
 
-        <div className="mt-12 pt-8 border-t border-slate-100 flex justify-end gap-4">
-          <button 
-            type="button" 
-            onClick={onCancel}
-            disabled={isSubmitting}
-            className="px-8 py-3.5 text-[11px] font-black text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all uppercase tracking-[0.2em]"
-          >
-            {t.cancel}
-          </button>
+        {/* Action Row */}
+        <div className="pt-8 border-t border-slate-100 flex items-center gap-6 justify-start">
           <button 
             type="submit" 
             disabled={isSubmitting}
-            className="px-10 py-3.5 text-[11px] font-black text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-xl shadow-blue-600/20 flex items-center gap-3 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed uppercase tracking-[0.2em]"
+            className="flex items-center gap-2 px-8 py-2 bg-[#22c55e] hover:bg-green-600 text-white rounded text-sm font-bold shadow-lg shadow-green-600/20 transition-all active:scale-95 disabled:opacity-50"
           >
             {isSubmitting ? (
-              <>
-                <Loader2 size={18} className="animate-spin" /> Synchronizing...
-              </>
-            ) : (
-              <>
-                <Save size={18} /> {t.authorize}
-              </>
-            )}
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : <Save size={18} />}
+            Save
+          </button>
+          <button 
+            type="button" 
+            onClick={onCancel} 
+            className="text-blue-600 hover:underline text-sm font-bold transition-all"
+          >
+            Cancel
           </button>
         </div>
       </form>
     </div>
   );
 };
+
+const FormRow = ({ label, children }: { label: string, children: React.ReactNode }) => (
+  <div className="flex flex-col sm:flex-row items-start sm:items-center">
+    <div className="w-full sm:w-1/3 mb-1 sm:mb-0">
+      <label className="text-[11px] font-black text-slate-500 uppercase tracking-tight text-right block sm:pr-8">
+        {label}
+      </label>
+    </div>
+    <div className="w-full sm:w-2/3">
+      {children}
+    </div>
+  </div>
+);
+
+const RadioOption = ({ label, name, value, current, onChange }: any) => (
+  <label className="flex items-center gap-2.5 cursor-pointer group">
+    <input 
+      type="radio" 
+      name={name} 
+      value={value} 
+      checked={current === value} 
+      onChange={onChange}
+      className="w-4 h-4 border-slate-300 bg-white text-blue-600 focus:ring-blue-500 accent-blue-600 transition-all cursor-pointer" 
+    />
+    <span className="text-[11px] font-bold text-slate-700 group-hover:text-blue-600 transition-colors uppercase tracking-tight select-none">{label}</span>
+  </label>
+);
 
 export default OnuProvisionForm;

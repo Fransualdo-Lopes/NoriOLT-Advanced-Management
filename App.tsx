@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ViewType, SettingsTab } from './types';
+import { ViewType, SettingsTab, UnconfiguredONU } from './types';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { I18nProvider, useTranslation } from './contexts/I18nContext';
 import { Permission } from './roles';
@@ -22,6 +22,7 @@ const AppContent: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   const [selectedOnuId, setSelectedOnuId] = useState<string | null>(null);
+  const [provisioningOnu, setProvisioningOnu] = useState<UnconfiguredONU | null>(null);
 
   const navigateToSettings = (tab: SettingsTab = 'general') => {
     setSettingsTab(tab);
@@ -31,6 +32,11 @@ const AppContent: React.FC = () => {
   const navigateToOnuDetails = (id: string) => {
     setSelectedOnuId(id);
     setActiveView('onu-details');
+  };
+
+  const startProvisioning = (onu: UnconfiguredONU) => {
+    setProvisioningOnu(onu);
+    setActiveView('provisioning');
   };
 
   const renderProtectedView = (viewId: ViewType, permission: Permission, component: React.ReactNode) => {
@@ -48,24 +54,27 @@ const AppContent: React.FC = () => {
         return renderProtectedView(
           'configured', 
           Permission.VIEW_CONFIGURED, 
-          <ConfiguredView language={language} onAddOnu={() => setActiveView('provisioning')} onViewOnu={navigateToOnuDetails} />
+          <ConfiguredView language={language} onAddOnu={() => { setProvisioningOnu(null); setActiveView('provisioning'); }} onViewOnu={navigateToOnuDetails} />
         );
       case 'unconfigured':
         return renderProtectedView(
           'unconfigured', 
           Permission.VIEW_UNCONFIGURED, 
-          <UnconfiguredView language={language} />
+          <UnconfiguredView language={language} onAuthorize={startProvisioning} />
         );
       case 'provisioning':
         return renderProtectedView(
           'provisioning',
           Permission.PROVISION_ONU,
-          <div className="animate-in fade-in zoom-in duration-300">
-            <OnuProvisionForm 
-              language={language} 
-              onCancel={() => setActiveView('configured')}
-              onSuccess={() => setActiveView('configured')}
-            />
+          <div className="flex flex-col items-center justify-center py-8 min-h-[calc(100vh-120px)] animate-in fade-in zoom-in duration-300">
+            <div className="w-full max-w-3xl">
+              <OnuProvisionForm 
+                language={language} 
+                onCancel={() => setActiveView('unconfigured')}
+                onSuccess={() => setActiveView('configured')}
+                initialData={provisioningOnu}
+              />
+            </div>
           </div>
         );
       case 'presets':
